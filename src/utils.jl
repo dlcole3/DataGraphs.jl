@@ -1,4 +1,4 @@
-function get_EC(g::Graph)
+function get_EC(g::DataGraph)
     nodes = g.nodes
     edges = g.edges
 
@@ -10,12 +10,13 @@ end
 function matrix_to_graph(matrix, weight_name::String="weight")
 
     dim1, dim2 = size(matrix)
-    g = Graph()
+    g = DataGraph()
 
-    edges        = Vector{Tuple{Int}}()
+    fadjlist     = [Vector{Int}() for i in 1:(dim1 * dim2)]
+    edges        = Vector{Tuple{Int, Int}}()
     nodes        = Vector{Any}()
     nodes_index  = Dict{Any, Int}()
-    edges_index  = Dict{Tuple{Int}, Int}()
+    edges_index  = Dict{Tuple{Int, Int}, Int}()
     node_data    = NamedArray(fill(NaN, (dim1*dim2,1)))
     setnames!(node_data, [weight_name], 2)
 
@@ -31,20 +32,28 @@ function matrix_to_graph(matrix, weight_name::String="weight")
         for j in 1:dim2
             column_offset = dim2 * (j - 1)
             for i in 1:dim1
-                if i != dim1
-                    edge = (i + column_offset, i + column_offset + 1)
-                    push!(edges, edge)
-                    edges_index[edge] = length(edges)
-                end
                 if j != dim2
                     edge = (i + column_offset, i + column_offset + dim1)
                     push!(edges, edge)
+                    push!(fadjlist[i + column_offset], i + column_offset + dim1)
+                    push!(fadjlist[i + column_offset + dim1], i + column_offset)
                     edges_index[edge] = length(edges)
                 end
+
+                if i != dim1
+                    edge = (i + column_offset, i + column_offset + 1)
+                    push!(fadjlist[i + column_offset], i + column_offset + 1)
+                    push!(fadjlist[i + column_offset + 1], i + column_offset)
+                    push!(edges, edge)
+                    edges_index[edge] = length(edges)
+                end
+
             end
         end
     end
 
+    g.ne              = length(edges)
+    g.fadjlist        = fadjlist
     g.nodes           = nodes
     g.nodes_index     = nodes_index
     g.edges           = unique_edges
@@ -66,12 +75,12 @@ function sym_matrix_to_graph(matrix, weight_name::String="weight", tol = 1e-9)
         error("Matrix is not symmetric")
     end
 
-    g = Graph()
+    g = DataGraph()
 
     for j in 1:dim2
-        for i in 1:dim1
+        for i in j:dim1
             add_edge!(g, i, j)
-            add_edge_weight!(g, i, j, matrix[i,j], weight_name)
+            add_edge_data!(g, i, j, matrix[i,j], weight_name)
         end
     end
 
@@ -89,7 +98,7 @@ function mvts_to_graph(mvts, weight_name::String="weight", tol=1e-9)
 end
 
 
-function filter_nodes(g::Graph, filter_val::Real; attribute::String=g.node_attributes[1])
+function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_attributes[1])
     node_attributes = g.node_attributes
     edge_attributes = g.edge_attributes
     node_data       = g.node_data
@@ -104,7 +113,7 @@ function filter_nodes(g::Graph, filter_val::Real; attribute::String=g.node_attri
         error("No node weights are defined")
     end
 
-    new_g = Graph()
+    new_g = DataGraph()
 
     am = create_adj_mat(g)
 
@@ -124,7 +133,8 @@ function filter_nodes(g::Graph, filter_val::Real; attribute::String=g.node_attri
 
     new_edges      = []
     new_edge_index = Dict()
-    old_edge_map = []
+    old_edge_map   = []
+    fadjlist       = [Vector{Int}() for i in 1:length(new_nodes)]
 
     for i in 1:length(new_nodes)
         new_node_index[new_nodes[i]] = i
@@ -137,9 +147,18 @@ function filter_nodes(g::Graph, filter_val::Real; attribute::String=g.node_attri
                 push!(new_edges, new_edge)
                 new_edge_index[(new_edge)] = length(new_edges)
 
+                @inbounds node_neighbors = fadjlist[i]
+                index = searchsortedfirst(node_neighbors, j)
+                insert!(node_neighbors, index, j)
+
+                @inbounds node_neighbors = fadjlist[j]
+                index = searchsortedfirst(node_neighbors, i)
+                insert!(node_neighbors, index, i)
+
                 old_edge = _get_node(nodes_index(new_nodes[j]), nodes_index(new_nodes[i]))
                 if old_edge in edges
                     push!(old_edge_map, edges_index[old_edge])
+                end
             end
         end
     end
@@ -149,6 +168,8 @@ function filter_nodes(g::Graph, filter_val::Real; attribute::String=g.node_attri
         new_g.edge_weights    = new_edge_weights
     end
 
+    new_g.ne              = length(new_edges)
+    new_g.fadjlist        = fadjlist
     new_g.nodes           = new_nodes
     new_g.edges           = new_edges
     new_g.edges_index     = new_edge_index
@@ -162,7 +183,7 @@ function filter_nodes(g::Graph, filter_val::Real; attribute::String=g.node_attri
     return new_g
 end
 
-function filter_edges(g::Graph, filter_val::Real; attribute::String = g.edge_attributes[1])
+function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge_attributes[1])
     nodes           = g.nodes
     edges           = g.edges
     node_attributes = g.node_attributes
@@ -181,13 +202,25 @@ function filter_edges(g::Graph, filter_val::Real; attribute::String = g.edge_att
 
     new_edge_index = Dict()
 
+    fadjlist = [Vector{Int}() for i in 1:length(nodes)]
     for i in 1:length(new_edges)
         new_edge_index[new_edges[i]] = i
+
+        node1, node2 = new_edges[i]
+
+        @inbounds node_neighbors = fadjlist[node1]
+        index = searchsortedfirst(node_neighbors, node2)
+        insert!(node_neighbors, index, node2)
+
+        @inbounds node_neighbors = fadjlist[node2]
+        index = searchsortedfirst(node_neighbors, node1)
+        insert!(node_neighbors, index, node1)
     end
 
+    new_g = DataGraph()
 
-    new_g = Graph()
-
+    new_g.ne              = length(new_edges)
+    new_g.fadjlist        = fadjlist
     new_g.nodes           = nodes
     new_g.edges           = new_edges
     new_g.edge_weights    = new_edge_weights
@@ -202,7 +235,7 @@ function filter_edges(g::Graph, filter_val::Real; attribute::String = g.edge_att
 
 end
 
-function run_EC_on_nodes(g::Graph, thresh; attribute::String = g.node_attributes[1])
+function run_EC_on_nodes(g::DataGraph, thresh; attribute::String = g.node_attributes[1])
     nodes        = g.nodes
     node_data    = g.node_data
 
@@ -227,7 +260,7 @@ function run_EC_on_nodes(g::Graph, thresh; attribute::String = g.node_attributes
     return ECs
 end
 
-function run_EC_on_edges(g::Graph, thresh; attribute::String = g.edge_attributes[1])
+function run_EC_on_edges(g::DataGraph, thresh; attribute::String = g.edge_attributes[1])
     edge_weights = g.edge_weights
     nodes        = g.nodes
 
@@ -244,7 +277,7 @@ function run_EC_on_edges(g::Graph, thresh; attribute::String = g.edge_attributes
     return ECs
 end
 
-function aggregate(g::Graph, node_set, new_name)
+function aggregate(g::DataGraph, node_set, new_name)
     nodes           = g.nodes
     nodes_index     = g.nodes_index
     node_data       = g.node_data
@@ -264,7 +297,7 @@ function aggregate(g::Graph, node_set, new_name)
         error("New node name already exists in set of non-aggregated nodes")
     end
 
-    new_g = Graph()
+    new_g = DataGraph()
 
     new_nodes = setdiff(nodes, node_set)
     push!(new_nodes, new_name)
@@ -294,6 +327,7 @@ function aggregate(g::Graph, node_set, new_name)
         node_data_to_keep = node_data[indices_to_keep, :]
         new_node_data     = vcat(node_data_to_keep, node_weight_avg)
         setnames!(new_node_data, node_attributes, 2)
+
         new_g.node_attributes = node_attributes
         new_g.node_data       = new_node_data
     end
@@ -314,8 +348,6 @@ function aggregate(g::Graph, node_set, new_name)
         push!(new_node_positions, Point(xvals/length(node_set), yvals/length(node_set)))
         new_g.node_positions = new_node_positions
     end
-
-
 
     edges           = g.edges
     edge_weights    = g.edge_weights
@@ -352,7 +384,6 @@ function aggregate(g::Graph, node_set, new_name)
             end
         end
 
-
         old_am = am[old_indices, indices_to_keep]
         sum_old_am = sum(old_am, dims=1)
 
@@ -386,7 +417,6 @@ function aggregate(g::Graph, node_set, new_name)
 
         multi_edges = sum_old_am .> 1
         new_edge_weights
-
 
         for i in 1:length(indices_to_keep)
             if sum_old_am[i] == 1

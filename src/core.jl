@@ -6,8 +6,8 @@ mutable struct DataGraph{T} <: AbstractDataGraph{T}
 
     nodes::Vector{Any}
     edges::Vector{Tuple{T, T}}
-    nodes_index::Dict{Any, T}
-    edges_index::Dict{Tuple{T, T}, T}
+    node_map::Dict{Any, T}
+    edge_map::Dict{Tuple{T, T}, T}
 
     node_attributes::Vector{String}
     edge_attributes::Vector{String}
@@ -26,8 +26,8 @@ function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}
     fadjlist::Vector{Vector{T}} = [Vector{T} for i in 1:length(nodes)],
     node_attributes::Vector{String} = String[],
     edge_attributes::Vector{String} = String[],
-    nodes_index::Dict{Any, Int} = Dict{Any, Int}(),
-    edges_index::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
+    node_map::Dict{Any, Int} = Dict{Any, Int}(),
+    edge_map::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
     node_data::NamedArray = [],
     edge_data::NamedArray = [],
     node_positions = [[0.0 0.0]]
@@ -36,15 +36,15 @@ function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}
     if length(edges) != ne
         error("Defined edges do not match ne")
     end
-    if ne != length(edges_index)
-        error("edges_index does not match the number of edges")
+    if ne != length(edge_map)
+        error("edge_map does not match the number of edges")
     end
-    if length(nodes) != length(nodes_index)
-        error("nodes_index does not match the number of nodes")
+    if length(nodes) != length(node_map)
+        error("node_map does not match the number of nodes")
     end
 
     DataGraph{T}(
-        ne, fadjlist, nodes, edges, nodes_index, edges_index,
+        ne, fadjlist, nodes, edges, node_map, edge_map,
         node_attributes, edge_attributes, node_data, edge_data,
         node_positions
     )
@@ -59,14 +59,14 @@ function DataGraph()
 
     node_attributes = String[]
     edge_attributes = String[]
-    nodes_index = Dict{Any, Int}()
-    edges_index = Dict{Tuple{Int, Int}, Int}()
+    node_map = Dict{Any, Int}()
+    edge_map = Dict{Tuple{Int, Int}, Int}()
     node_data = []
     edge_data = []
     node_positions = [[0.0 0.0]]
 
     DataGraph{Int}(
-        ne, fadjlist, nodes, edges, nodes_index, edges_index,
+        ne, fadjlist, nodes, edges, node_map, edge_map,
         node_attributes, edge_attributes, node_data, edge_data,
         node_positions
     )
@@ -87,9 +87,9 @@ end
 Add the node `node_name` to the graph `g`
 """
 function add_node!(g::DataGraph,node_name::Any)
-    nodes       = g.nodes
-    attributes  = g.node_attributes
-    nodes_index = g.nodes_index
+    nodes      = g.nodes
+    attributes = g.node_attributes
+    node_map   = g.node_map
 
     T = eltype(g)
 
@@ -110,8 +110,8 @@ function add_node!(g::DataGraph,node_name::Any)
         end
 
         # Add the new node as a key to the dictionary
-        nodes_index[node_name] = length(nodes)
-        g.nodes_index = nodes_index
+        node_map[node_name] = length(nodes)
+        g.node_map = node_map
         return true
 
     else
@@ -129,10 +129,10 @@ Add an edge to the graph, `g`. If the nodes are not defined in the graph, they a
 """
 function add_edge!(g::DataGraph, node1::Any, node2::Any)
     # TODO: do things differently if edge attributes are defined or not defined;
-    edges       = g.edges
-    nodes       = g.nodes
-    attributes  = g.edge_attributes
-    edges_index = g.edges_index
+    edges      = g.edges
+    nodes      = g.nodes
+    attributes = g.edge_attributes
+    edge_map   = g.edge_map
 
     if !(node1 in nodes)
         add_node!(g, node1)
@@ -142,10 +142,10 @@ function add_edge!(g::DataGraph, node1::Any, node2::Any)
     end
 
     nodes       = g.nodes
-    nodes_index = g.nodes_index
+    node_map = g.node_map
 
-    node1_index = nodes_index[node1]
-    node2_index = nodes_index[node2]
+    node1_index = node_map[node1]
+    node2_index = node_map[node2]
 
     edge = _get_edge(node1_index, node2_index)
 
@@ -171,7 +171,7 @@ function add_edge!(g::DataGraph, node1::Any, node2::Any)
             g.edge_data = edge_data
         end
 
-        edges_index[edge] = length(edges)
+        edge_map[edge] = length(edges)
         return true
     else
         return false
@@ -179,10 +179,10 @@ function add_edge!(g::DataGraph, node1::Any, node2::Any)
 end
 
 function add_node_data!(g::DataGraph, node::Any, node_weight::Number, attribute::String)
-    nodes   = g.nodes
-    attributes   = g.node_attributes
-    nodes_index  = g.nodes_index
-    node_data = g.node_data
+    nodes      = g.nodes
+    attributes = g.node_attributes
+    node_map   = g.node_map
+    node_data  = g.node_data
 
     if !(node in nodes)
         error("node does not exist in graph")
@@ -200,23 +200,23 @@ function add_node_data!(g::DataGraph, node::Any, node_weight::Number, attribute:
         new_col = NamedArray(fill(NaN, length(nodes)), nodes)
         node_data = hcat(node_data, new_col)
         setnames!(node_data, attributes, 2)
-        node_data[nodes_index[node], attribute] = node_weight
+        node_data[node_map[node], attribute] = node_weight
 
     else
-        node_data[nodes_index[node], attribute] = node_weight
+        node_data[node_map[node], attribute] = node_weight
         return true
     end
 end
 
 
 function add_edge_data!(g::DataGraph, node1::Any, node2::Any, edge_weight::Real, attribute::String)
-    edge_array   = g.edges
-    attributes   = g.edge_attributes
-    edges_index  = g.edges_index
-    nodes_index  = g.nodes_index
+    edge_array  = g.edges
+    attributes  = g.edge_attributes
+    edge_map = g.edge_map
+    node_map    = g.node_map
 
-    node1_index = nodes_index[node1]
-    node2_index = nodes_index[node2]
+    node1_index = node_map[node1]
+    node2_index = node_map[node2]
 
     edge = _get_edge(node1_index, node2_index)
 
@@ -237,10 +237,10 @@ function add_edge_data!(g::DataGraph, node1::Any, node2::Any, edge_weight::Real,
         new_col = NamedArray(fill(NaN, length(edge_array)), edge_array)
         edge_data = hcat(edge_data, new_col)
         setnames!(edge_data, attributes, 2)
-        edge_data[edges_index[edge], attribute] = edge_weight
+        edge_data[edge_map[edge], attribute] = edge_weight
     else
         edge_data = g.edge_data
-        edge_data[edges_index[edge], attribute] = edge_weight
+        edge_data[edge_map[edge], attribute] = edge_weight
     end
 
 end
@@ -248,7 +248,7 @@ end
 function create_adj_mat(g::DataGraph; sparse::Bool = true)
     nodes       = g.nodes
     edges       = g.edges
-    nodes_index = g.nodes_index
+    node_map = g.node_map
 
     nn = length(nodes)
 

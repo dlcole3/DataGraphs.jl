@@ -12,18 +12,18 @@ function matrix_to_graph(matrix, weight_name::String="weight")
     dim1, dim2 = size(matrix)
     g = DataGraph()
 
-    fadjlist     = [Vector{Int}() for i in 1:(dim1 * dim2)]
-    edges        = Vector{Tuple{Int, Int}}()
-    nodes        = Vector{Any}()
-    nodes_index  = Dict{Any, Int}()
-    edges_index  = Dict{Tuple{Int, Int}, Int}()
-    node_data    = NamedArray(fill(NaN, (dim1*dim2,1)))
+    fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
+    edges     = Vector{Tuple{Int, Int}}()
+    nodes     = Vector{Any}()
+    node_map  = Dict{Any, Int}()
+    edge_map  = Dict{Tuple{Int, Int}, Int}()
+    node_data = NamedArray(fill(NaN, (dim1*dim2,1)))
     setnames!(node_data, [weight_name], 2)
 
     for j in 1:dim2
         for i in 1:dim1
             push!(nodes, (i, j))
-            nodes_index[(i, j)] = length(nodes)
+            node_map[(i, j)] = length(nodes)
             node_data[length(nodes), weight_name] = matrix[i, j]
         end
     end
@@ -37,7 +37,7 @@ function matrix_to_graph(matrix, weight_name::String="weight")
                     push!(edges, edge)
                     push!(fadjlist[i + column_offset], i + column_offset + dim1)
                     push!(fadjlist[i + column_offset + dim1], i + column_offset)
-                    edges_index[edge] = length(edges)
+                    edge_map[edge] = length(edges)
                 end
 
                 if i != dim1
@@ -45,7 +45,7 @@ function matrix_to_graph(matrix, weight_name::String="weight")
                     push!(fadjlist[i + column_offset], i + column_offset + 1)
                     push!(fadjlist[i + column_offset + 1], i + column_offset)
                     push!(edges, edge)
-                    edges_index[edge] = length(edges)
+                    edge_map[edge] = length(edges)
                 end
 
             end
@@ -55,9 +55,9 @@ function matrix_to_graph(matrix, weight_name::String="weight")
     g.ne              = length(edges)
     g.fadjlist        = fadjlist
     g.nodes           = nodes
-    g.nodes_index     = nodes_index
+    g.node_map        = node_map
     g.edges           = edges
-    g.edges_index     = edges_index
+    g.edge_map        = edge_map
     g.node_data       = node_data
     g.node_attributes = [weight_name]
 
@@ -103,8 +103,8 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     node_data       = g.node_data
     node_index      = g.node_index
     nodes           = g.nodes
-    edge_data    = g.edge_data
-    edges_index     = g.edges_index
+    edge_data       = g.edge_data
+    edge_map        = g.edge_map
     edges           = g.edges
     node_positions  = g.node_positions
 
@@ -156,9 +156,9 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
                 index = searchsortedfirst(node_neighbors, i)
                 insert!(node_neighbors, index, i)
 
-                old_edge = _get_node(nodes_index(new_nodes[j]), nodes_index(new_nodes[i]))
+                old_edge = _get_node(node_map(new_nodes[j]), node_map(new_nodes[i]))
                 if old_edge in edges
-                    push!(old_edge_map, edges_index[old_edge])
+                    push!(old_edge_map, edge_map[old_edge])
                 end
             end
         end
@@ -173,8 +173,8 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     new_g.fadjlist        = fadjlist
     new_g.nodes           = new_nodes
     new_g.edges           = new_edges
-    new_g.edges_index     = new_edge_index
-    new_g.nodes_index     = new_node_index
+    new_g.edge_map     = new_edge_index
+    new_g.node_map     = new_node_index
     new_g.node_attributes = attributes
     new_g.edge_attributes = edge_attributes
     new_g.node_data       = new_node_data
@@ -189,7 +189,7 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
     node_attributes = g.node_attributes
     edge_attributes = g.edge_attributes
     edge_data       = g.edge_data
-    node_index      = g.nodes_index
+    node_index      = g.node_map
 
     if length(edge_attributes) == 0
         error("No node weights are defined")
@@ -226,8 +226,8 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
     new_g.nodes           = nodes
     new_g.edges           = new_edges
     new_g.edge_data       = new_edge_data
-    new_g.nodes_index     = node_index
-    new_g.edges_index     = new_edge_index
+    new_g.node_map        = node_index
+    new_g.edge_map     = new_edge_index
     new_g.node_attributes = node_attributes
     new_g.edge_attributes = edge_attributes
     new_g.node_positions  = g.node_positions
@@ -280,7 +280,7 @@ end
 
 function aggregate(g::DataGraph, node_set, new_name)
     nodes           = g.nodes
-    nodes_index     = g.nodes_index
+    node_map        = g.node_map
     node_data       = g.node_data
     node_attributes = g.node_attributes
     node_positions  = g.node_positions
@@ -314,7 +314,7 @@ function aggregate(g::DataGraph, node_set, new_name)
     # Get indices of old nodes
     old_indices = []
     for i in node_set
-        old_index = nodes_index[i]
+        old_index = node_map[i]
         push!(old_indices, old_index)
     end
 
@@ -351,20 +351,20 @@ function aggregate(g::DataGraph, node_set, new_name)
     edges           = g.edges
     edge_data       = g.edge_data
     edge_attributes = g.edge_attributes
-    edges_index     = g.edges_index
+    edge_map        = g.edge_map
 
     fadjlist = [Vector{T}() for i in 1:length(new_nodes)]
 
     node_name_mapping = Dict{T, Any}()
     new_edges    = Vector{Tuple{T, T}}()
-    new_edges_index  = Dict{Tuple{T, T}, T}()
+    new_edge_map  = Dict{Tuple{T, T}, T}()
     edge_bool_vec = [false for i in 1:length(edges)]
     #edge_bool_vec_avg = [false for i in 1:length(edges)]
     edge_bool_avg_index = Dict{Tuple{T, T}, Vector{T}}()
     new_edge_data = fill(NaN, (0, length(edge_attributes)))
 
     for i in 1:length(nodes)
-        node_name_mapping[nodes_index[nodes[i]]] = nodes[i]
+        node_name_mapping[node_map[nodes[i]]] = nodes[i]
     end
 
     for (i, edge) in enumerate(edges)
@@ -376,7 +376,7 @@ function aggregate(g::DataGraph, node_set, new_name)
             new_node2 = new_node_dict[node_name_mapping[edge[2]]]
 
             push!(new_edges, (new_node1, new_node2))
-            new_edges_index[(new_node1, new_node2)] = length(edges)
+            new_edge_map[(new_node1, new_node2)] = length(edges)
 
             @inbounds node_neighbors = fadjlist[new_node1]
             index = searchsortedfirst(node_neighbors, new_node2)
@@ -387,7 +387,7 @@ function aggregate(g::DataGraph, node_set, new_name)
             insert!(node_neighbors, index, new_node1)
 
             if length(edge_attributes) > 0
-                new_edge_data = vcat(new_edge_data, edge_data[edges_index[edge], :]')
+                new_edge_data = vcat(new_edge_data, edge_data[edge_map[edge], :]')
             end
 
             edge_bool_vec[i] = true
@@ -397,7 +397,7 @@ function aggregate(g::DataGraph, node_set, new_name)
 
             if !((new_node1, new_node2) in edges)
                 push!(new_edges, (new_node1, new_node2))
-                new_edges_index[(new_node1, new_node2)] = length(edges)
+                new_edge_map[(new_node1, new_node2)] = length(edges)
 
                 @inbounds node_neighbors = fadjlist[new_node1]
                 index = searchsortedfirst(node_neighbors, new_node2)
@@ -409,10 +409,10 @@ function aggregate(g::DataGraph, node_set, new_name)
 
                 if length(edge_attributes) > 0
                     new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
-                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edges_index[edge]])
+                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edge_map[edge]])
                 end
             else
-                push!(edge_bool_avg_index[(new_node1, new_node2)], edges_index[edge])
+                push!(edge_bool_avg_index[(new_node1, new_node2)], edge_map[edge])
             end
         elseif node1_bool && !node2_bool
             new_node1 = new_node_dict[node_name_mapping[edge[2]]]
@@ -420,7 +420,7 @@ function aggregate(g::DataGraph, node_set, new_name)
 
             if !((new_node1, new_node2) in edges)
                 push!(new_edges, (new_node1, new_node2))
-                new_edges_index[(new_node1, new_node2)] = length(edges)
+                new_edge_map[(new_node1, new_node2)] = length(edges)
 
                 @inbounds node_neighbors = fadjlist[new_node1]
                 index = searchsortedfirst(node_neighbors, new_node2)
@@ -432,11 +432,11 @@ function aggregate(g::DataGraph, node_set, new_name)
 
                 if length(edge_attributes) > 0
                     new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
-                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edges_index[edge]])
+                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edge_map[edge]])
                 end
             else
                 if length(edge_attributes) > 0
-                    push!(edge_bool_avg_index[(new_node1, new_node2)], edges_index[edge])
+                    push!(edge_bool_avg_index[(new_node1, new_node2)], edge_map[edge])
                 end
             end
         end
@@ -445,7 +445,7 @@ function aggregate(g::DataGraph, node_set, new_name)
     if length(edge_attributes) > 0
 
         for edge in keys(edge_bool_avg_index)
-            new_index = new_edges_index[edge]
+            new_index = new_edge_map[edge]
             edge_data_to_avg = edge_data[edge_bool_avg_index[edge], :]
 
             edge_data_avg = Statistics.mean(edge_data_to_avg; dims = 1)
@@ -462,9 +462,9 @@ function aggregate(g::DataGraph, node_set, new_name)
     new_g.ne          = length(new_edges)
     new_g.fadjlist    = fadjlist
     new_g.nodes       = new_nodes
-    new_g.nodes_index = new_node_dict
+    new_g.node_map = new_node_dict
     new_g.edges       = new_edges
-    new_g.edges_index = new_edges_index
+    new_g.edge_map = new_edge_map
 
     return new_g
 end

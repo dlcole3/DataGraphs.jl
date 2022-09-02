@@ -37,7 +37,7 @@ function plot_graph(g::DataGraph;
 
     plt = scatter([i[1] for i in pos], [i[2] for i in pos];markercolor=markercolor, markersize=markersize, plt_options...)
 
-    node_dict = g.nodes_index
+    node_dict = g.node_map
 
     if plot_edges
         for i in g.edges

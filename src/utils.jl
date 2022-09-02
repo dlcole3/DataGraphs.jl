@@ -112,6 +112,8 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
         error("No node weights are defined")
     end
 
+    T = eltype(g)
+
     new_g = DataGraph()
 
     am = create_adj_mat(g)
@@ -133,7 +135,7 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     new_edges      = []
     new_edge_index = Dict()
     old_edge_map   = []
-    fadjlist       = [Vector{Int}() for i in 1:length(new_nodes)]
+    fadjlist       = [Vector{T}() for i in 1:length(new_nodes)]
 
     for i in 1:length(new_nodes)
         new_node_index[new_nodes[i]] = i
@@ -194,6 +196,8 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
         error("No node weights are defined")
     end
 
+    T = eltype(g)
+
     bool_vec = g.edge_data[:, attribute] .< filter_val
 
     new_edges = edges[bool_vec]
@@ -201,7 +205,7 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
 
     new_edge_index = Dict()
 
-    fadjlist = [Vector{Int}() for i in 1:length(nodes)]
+    fadjlist = [Vector{T}() for i in 1:length(nodes)]
     for i in 1:length(new_edges)
         new_edge_index[new_edges[i]] = i
 
@@ -218,7 +222,7 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
 
     new_g = DataGraph()
 
-    new_g.ne              = length(new_edges)
+    new_g.ne              = T(length(new_edges))
     new_g.fadjlist        = fadjlist
     new_g.nodes           = nodes
     new_g.edges           = new_edges
@@ -295,6 +299,8 @@ function aggregate(g::DataGraph, node_set, new_name)
         error("New node name already exists in set of non-aggregated nodes")
     end
 
+    T = eltype(g)
+
     new_g = DataGraph()
 
     new_nodes = setdiff(nodes, node_set)
@@ -348,14 +354,14 @@ function aggregate(g::DataGraph, node_set, new_name)
     edge_attributes = g.edge_attributes
     edges_index     = g.edges_index
 
-    fadjlist = [Vector{Int}() for i in 1:length(new_nodes)]
+    fadjlist = [Vector{T}() for i in 1:length(new_nodes)]
 
-    node_name_mapping = Dict{Int, Any}()
-    new_edges    = Vector{Tuple{Int, Int}}()
-    new_edges_index  = Dict{Tuple{Int, Int}, Int}()
+    node_name_mapping = Dict{T, Any}()
+    new_edges    = Vector{Tuple{T, T}}()
+    new_edges_index  = Dict{Tuple{T, T}, T}()
     edge_bool_vec = [false for i in 1:length(edges)]
     #edge_bool_vec_avg = [false for i in 1:length(edges)]
-    edge_bool_avg_index = Dict{Tuple{Int, Int}, Vector{Int}}()
+    edge_bool_avg_index = Dict{Tuple{T, T}, Vector{T}}()
     new_edge_data = fill(NaN, (0, length(edge_attributes)))
 
     for i in 1:length(nodes)
@@ -404,7 +410,7 @@ function aggregate(g::DataGraph, node_set, new_name)
 
                 if length(edge_attributes) > 0
                     new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
-                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{Int}([edges_index[edge]])
+                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edges_index[edge]])
                 end
             else
                 push!(edge_bool_avg_index[(new_node1, new_node2)], edges_index[edge])
@@ -427,7 +433,7 @@ function aggregate(g::DataGraph, node_set, new_name)
 
                 if length(edge_attributes) > 0
                     new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
-                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{Int}([edges_index[edge]])
+                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edges_index[edge]])
                 end
             else
                 if length(edge_attributes) > 0

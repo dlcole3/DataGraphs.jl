@@ -1,7 +1,4 @@
-
-
 abstract type AbstractDataGraph{T} <: Graphs.AbstractGraph{T} end
-
 
 mutable struct DataGraph{T} <: AbstractDataGraph{T}
     ne::Int
@@ -22,6 +19,10 @@ mutable struct DataGraph{T} <: AbstractDataGraph{T}
     adj_mat::Union{Array{Int}, Nothing}
 end
 
+function Base.eltype(datagraph::DataGraph)
+    return eltype(datagraph.fadjlist)
+end
+
 function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}} = Vector{Tuple{Int, Int}}();
     ne::Int = length(edges),
     fadjlist::Vector{Vector{T}} = [Vector{T} for i in 1:length(nodes)],
@@ -33,10 +34,16 @@ function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}
     edge_data::NamedArray = [],
     node_positions = [[0.0 0.0]],
     adj_mat::Union{Array{Int}, Nothing} = nothing
-) where T <: Union{Int8, Int16, Int32, Int64, Int}
+) where T <: Int
 
     if length(edges) != ne
         error("Defined edges do not match ne")
+    end
+    if ne != length(edges_index)
+        error("edges_index does not match the number of edges")
+    end
+    if length(nodes) != length(nodes_index)
+        error("nodes_index does not match the number of nodes")
     end
 
     DataGraph{T}(
@@ -88,17 +95,19 @@ function add_node!(g::DataGraph,node_name::Any)
     attributes  = g.node_attributes
     nodes_index = g.nodes_index
 
+    T = eltype(g)
+
     # If new node is not in the list of nodes, add it
     # otherwise, print that the node exists and don't do anything
     if !(node_name in nodes)
         push!(nodes,node_name)
-        push!(g.fadjlist, Vector{Int}())
+        push!(g.fadjlist, Vector{T}())
 
         # If there are data currently defined on the other nodes, add a NaN value to
         # the end of the weight array for the new node
         if length(attributes)>0
             node_data = g.node_data
-            row_to_add = NamedArray(fill(NaN, (1,length(attributes))))
+            row_to_add = NamedArray(fill(NaN, (1, length(attributes))))
             node_data = vcat(node_data, row_to_add)
             setnames!(node_data, attributes, 2)
             g.node_data = node_data

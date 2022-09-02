@@ -1,4 +1,3 @@
-
 function plot_graph(g::DataGraph;
     get_new_positions::Bool=true,
     save_pos::Bool=true,
@@ -23,7 +22,7 @@ function plot_graph(g::DataGraph;
     am = create_adj_mat(g)
 
     if get_new_positions
-        pos = NetworkLayout.sfdp(LightGraphs.Graph(am); tol = tol, C = C, K = K, iterations = iterations)
+        pos = NetworkLayout.sfdp(Graphs.SimpleGraph(am); tol = tol, C = C, K = K, iterations = iterations)
     else
         pos = g.node_positions
     end
@@ -36,7 +35,6 @@ function plot_graph(g::DataGraph;
         error("No positions in graph")
     end
 
-
     plt = scatter([i[1] for i in pos], [i[2] for i in pos];markercolor=markercolor, markersize=markersize, plt_options...)
 
     node_dict = g.nodes_index
@@ -46,10 +44,7 @@ function plot_graph(g::DataGraph;
             from = i[1]
             to   = i[2]
 
-            from_index = node_dict[from]
-            to_index   = node_dict[to]
-
-            plot!(plt,[pos[from_index][1], pos[to_index][1]], [pos[from_index][2], pos[to_index][2]]; line_options...)
+            plot!(plt,[pos[from][1], pos[to][1]], [pos[from][2], pos[to][2]]; line_options...)
         end
     end
     display(plt)

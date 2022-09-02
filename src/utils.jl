@@ -56,7 +56,7 @@ function matrix_to_graph(matrix, weight_name::String="weight")
     g.fadjlist        = fadjlist
     g.nodes           = nodes
     g.nodes_index     = nodes_index
-    g.edges           = unique_edges
+    g.edges           = edges
     g.edges_index     = edges_index
     g.node_data       = node_data
     g.node_attributes = [weight_name]
@@ -97,14 +97,13 @@ function mvts_to_graph(mvts, weight_name::String="weight", tol=1e-9)
     return g
 end
 
-
 function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_attributes[1])
     node_attributes = g.node_attributes
     edge_attributes = g.edge_attributes
     node_data       = g.node_data
     node_index      = g.node_index
     nodes           = g.nodes
-    edge_weights    = g.edge_data
+    edge_data    = g.edge_data
     edges_index     = g.edges_index
     edges           = g.edges
     node_positions  = g.node_positions
@@ -164,8 +163,8 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     end
 
     if length(edge_attributes) > 0
-        new_edge_weights = edge_weights[old_edge_index, :]
-        new_g.edge_weights    = new_edge_weights
+        new_edge_data = edge_data[old_edge_index, :]
+        new_g.edge_data    = new_edge_data
     end
 
     new_g.ne              = length(new_edges)
@@ -195,10 +194,10 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
         error("No node weights are defined")
     end
 
-    bool_vec = g.edge_weights[:, attribute] .< filter_val
+    bool_vec = g.edge_data[:, attribute] .< filter_val
 
     new_edges = edges[bool_vec]
-    new_edge_weights = edge_weights[bool_vec, :]
+    new_edge_data = edge_data[bool_vec, :]
 
     new_edge_index = Dict()
 
@@ -223,7 +222,7 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
     new_g.fadjlist        = fadjlist
     new_g.nodes           = nodes
     new_g.edges           = new_edges
-    new_g.edge_weights    = new_edge_weights
+    new_g.edge_data       = new_edge_data
     new_g.nodes_index     = node_index
     new_g.edges_index     = new_edge_index
     new_g.node_attributes = node_attributes
@@ -232,7 +231,6 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
     new_g.node_data       = g.node_data
 
     return new_g
-
 end
 
 function run_EC_on_nodes(g::DataGraph, thresh; attribute::String = g.node_attributes[1])
@@ -261,7 +259,7 @@ function run_EC_on_nodes(g::DataGraph, thresh; attribute::String = g.node_attrib
 end
 
 function run_EC_on_edges(g::DataGraph, thresh; attribute::String = g.edge_attributes[1])
-    edge_weights = g.edge_weights
+    edge_data = g.edge_data
     nodes        = g.nodes
 
     ECs = zeros(length(thresh))
@@ -269,7 +267,7 @@ function run_EC_on_edges(g::DataGraph, thresh; attribute::String = g.edge_attrib
     num_nodes = length(nodes)
 
     for (j,i) in enumerate(thresh)
-        bool_vec  = edge_weights[:, attribute] .< i
+        bool_vec  = edge_data[:, attribute] .< i
         num_edges = sum(bool_vec)
         ECs[j]    = num_nodes - num_edges
     end
@@ -308,9 +306,6 @@ function aggregate(g::DataGraph, node_set, new_name)
         new_node_dict[j] = i
     end
 
-    new_g.nodes       = new_nodes
-    new_g.nodes_index = new_node_dict
-
     # Get indices of old nodes
     old_indices = []
     for i in node_set
@@ -333,7 +328,6 @@ function aggregate(g::DataGraph, node_set, new_name)
     end
 
     if length(node_positions) > 1
-
         new_node_positions = node_positions[indices_to_keep]
         old_pos            = node_positions[old_indices]
 
@@ -350,120 +344,122 @@ function aggregate(g::DataGraph, node_set, new_name)
     end
 
     edges           = g.edges
-    edge_weights    = g.edge_weights
+    edge_data       = g.edge_data
     edge_attributes = g.edge_attributes
     edges_index     = g.edges_index
 
+    fadjlist = [Vector{Int}() for i in 1:length(new_nodes)]
+
+    node_name_mapping = Dict{Int, Any}()
+    new_edges    = Vector{Tuple{Int, Int}}()
+    new_edges_index  = Dict{Tuple{Int, Int}, Int}()
+    edge_bool_vec = [false for i in 1:length(edges)]
+    #edge_bool_vec_avg = [false for i in 1:length(edges)]
+    edge_bool_avg_index = Dict{Tuple{Int, Int}, Vector{Int}}()
+    new_edge_data = fill(NaN, (0, length(edge_attributes)))
+
+    for i in 1:length(nodes)
+        node_name_mapping[nodes_index[nodes[i]]] = nodes[i]
+    end
+
+    for (i, edge) in enumerate(edges)
+        node1_bool = edge[1] in old_indices
+        node2_bool = edge[2] in old_indices
+
+        if !node1_bool && !node2_bool
+            new_node1 = new_node_dict[node_name_mapping[edge[1]]]
+            new_node2 = new_node_dict[node_name_mapping[edge[2]]]
+
+            push!(new_edges, (new_node1, new_node2))
+            new_edges_index[(new_node1, new_node2)] = length(edges)
+
+            @inbounds node_neighbors = fadjlist[new_node1]
+            index = searchsortedfirst(node_neighbors, new_node2)
+            insert!(node_neighbors, index, new_node2)
+
+            @inbounds node_neighbors = fadjlist[new_node2]
+            index = searchsortedfirst(node_neighbors, new_node1)
+            insert!(node_neighbors, index, new_node1)
+
+            if length(edge_attributes) > 0
+                new_edge_data = vcat(new_edge_data, edge_data[edges_index[edge], :]')
+            end
+
+            edge_bool_vec[i] = true
+        elseif !node1_bool && node2_bool
+            new_node1 = new_node_dict[node_name_mapping[edge[1]]]
+            new_node2 = length(new_nodes)
+
+            if !((new_node1, new_node2) in edges)
+                push!(new_edges, (new_node1, new_node2))
+                new_edges_index[(new_node1, new_node2)] = length(edges)
+
+                @inbounds node_neighbors = fadjlist[new_node1]
+                index = searchsortedfirst(node_neighbors, new_node2)
+                insert!(node_neighbors, index, new_node2)
+
+                @inbounds node_neighbors = fadjlist[new_node2]
+                index = searchsortedfirst(node_neighbors, new_node1)
+                insert!(node_neighbors, index, new_node1)
+
+                if length(edge_attributes) > 0
+                    new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
+                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{Int}([edges_index[edge]])
+                end
+            else
+                push!(edge_bool_avg_index[(new_node1, new_node2)], edges_index[edge])
+            end
+        elseif node1_bool && !node2_bool
+            new_node1 = new_node_dict[node_name_mapping[edge[2]]]
+            new_node2 = length(new_nodes)
+
+            if !((new_node1, new_node2) in edges)
+                push!(new_edges, (new_node1, new_node2))
+                new_edges_index[(new_node1, new_node2)] = length(edges)
+
+                @inbounds node_neighbors = fadjlist[new_node1]
+                index = searchsortedfirst(node_neighbors, new_node2)
+                insert!(node_neighbors, index, new_node2)
+
+                @inbounds node_neighbors = fadjlist[new_node2]
+                index = searchsortedfirst(node_neighbors, new_node1)
+                insert!(node_neighbors, index, new_node1)
+
+                if length(edge_attributes) > 0
+                    new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
+                    edge_bool_avg_index[(new_node1, new_node2)] = Vector{Int}([edges_index[edge]])
+                end
+            else
+                if length(edge_attributes) > 0
+                    push!(edge_bool_avg_index[(new_node1, new_node2)], edges_index[edge])
+                end
+            end
+        end
+    end
+
     if length(edge_attributes) > 0
 
-    end
+        for edge in keys(edge_bool_avg_index)
+            new_index = new_edges_index[edge]
+            edge_data_to_avg = edge_data[edge_bool_avg_index[edge], :]
 
-    am = create_adj_mat(g)
-
-    new_am = am[indices_to_keep, indices_to_keep]
-
-    new_edges      = []
-    new_edge_index = Dict()
-
-
-    if length(node_att) > 0
-        node_data_to_avg = node_data[old_indices,:]
-        node_weight_avg     = Statistics.mean(node_data_to_avg; dims=1)
-
-        node_data_to_keep = node_data[indices_to_keep, :]
-        new_node_data     = vcat(node_data_to_keep, node_weight_avg)
-        setnames!(new_node_data, node_att, 2)
-    end
-
-    if length(edge_attributes) == 0
-
-        for i in 1:length(edges)
-            if setdiff(node_set, edges[i]) == node_set
-                push!(new_edges, edges[i])
-                new_edge_index[edges[i]] = length(new_edges)
-            end
+            edge_data_avg = Statistics.mean(edge_data_to_avg; dims = 1)
+            new_edge_data[new_index, :] = edge_data_avg[:]
         end
 
-        old_am = am[old_indices, indices_to_keep]
-        sum_old_am = sum(old_am, dims=1)
+        new_edge_data = NamedArray(new_edge_data)
+        setnames!(new_edge_data, edge_attributes, 2)
 
-        for i in 1:length(indices_to_keep)
-            if sum_old_am[i] >= 1
-                new_edge = (nodes[indices_to_keep[i]], new_name)
-                push!(new_edges, new_edge)
-                new_edge_index[new_edge] = length(new_edges)
-            end
-        end
-
-        new_g.edges       = new_edges
-        new_g.edges_index = new_edge_index
-    else
-        old_edges = []
-
-        for i in 1:length(edges)
-            if setdiff(node_set, edges[i]) == node_set
-                push!(new_edges, edges[i])
-                new_edge_index[edges[i]] = length(new_edges)
-                push!(old_edges, edges_index[edges[i]])
-            end
-        end
-
-        new_edge_weights = edge_weights[old_edges, :]
-
-        old_am = am[old_indices, indices_to_keep]
-
-
-        sum_old_am = sum(old_am, dims=1)
-
-        multi_edges = sum_old_am .> 1
-        new_edge_weights
-
-        for i in 1:length(indices_to_keep)
-            if sum_old_am[i] == 1
-                new_edge = (nodes[indices_to_keep[i]], new_name)
-                push!(new_edges, new_edge)
-                new_edge_index[new_edge] = length(new_edges)
-
-                for j in 1:length(node_set)
-                    if (nodes[indices_to_keep[i]], node_set[j]) in edges
-                        row_to_add = edge_weights[edges_index[(nodes[indices_to_keep[i]], node_set[j])], :]
-                    else
-                        row_to_add = edge_weights[edges_index[(node_set[j], nodes[indices_to_keep[i]])], :]
-                    end
-                end
-
-                new_edge_weights = vcat(new_edge_weights, row_to_add)
-
-            elseif sum_old_am[i] > 1
-                new_edge = (nodes[indices_to_keep[i]], new_name)
-                push!(new_edges, new_edge)
-                new_edge_index[new_edge] = length(new_edges)
-
-                edges_to_replace = []
-
-                for j in 1:length(node_set)
-                    if (nodes[indices_to_keep[i]], node_set[j]) in edges
-                        push!(edges_to_replace, edges_index[(nodes[indices_to_keep[i]], node_set[j])])
-                    end
-                    if (node_set[j], nodes[indices_to_keep[i]]) in edges
-                        push!(edges_to_replace, edges_index[(node_set[j], nodes[indices_to_keep[i]])])
-                    end
-                end
-                println(edges_to_replace)
-
-                rows_to_avg = edge_weights[edges_to_replace, :]
-                avgs        = Statistics.mean(rows_to_avg, dims=1)
-                new_edge_weights = vcat(new_edge_weights, avgs)
-
-            end
-        end
-        setnames!(new_edge_weights, edge_attributes, 2)
-        new_g.edges        = new_edges
-        new_g.edges_index  = new_edge_index
-        new_g.edge_weights = new_edge_weights
         new_g.edge_attributes = edge_attributes
-
+        new_g.edge_data       = new_edge_data
     end
+
+    new_g.ne          = length(new_edges)
+    new_g.fadjlist    = fadjlist
+    new_g.nodes       = new_nodes
+    new_g.nodes_index = new_node_dict
+    new_g.edges       = new_edges
+    new_g.edges_index = new_edges_index
 
     return new_g
 end

@@ -1,6 +1,5 @@
 include("../src/DataGraphs.jl")
-
-
+include("matrix_test.jl")
 dg = DataGraphs.DataGraph()
 
 DataGraphs.add_node!(dg, 1)
@@ -26,3 +25,5 @@ DataGraphs.add_edge_data!(dg, 2, 3, 4.2, "weight")
 DataGraphs.add_edge_data!(dg, "node4", 1, 1.0, "weight")
 DataGraphs.add_edge_data!(dg, :node5, 2, -.00001, "weight")
 DataGraphs.add_edge_data!(dg, 3, "node4", 1, "weight")
+
+DataGraphs.plot_graph(dg; xdim = 400, ydim = 400)

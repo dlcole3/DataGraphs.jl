@@ -179,7 +179,6 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     new_g.edge_attributes = edge_attributes
     new_g.node_data       = new_node_data
     new_g.node_positions  = new_node_pos
-    new_g.adj_mat         = new_am
 
     return new_g
 end

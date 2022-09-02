@@ -1,6 +1,5 @@
 include("../src/DataGraphs.jl")
 
-
 mat = rand(10, 10)
 
 mat_graph = DataGraphs.matrix_to_graph(mat)

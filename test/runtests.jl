@@ -1,5 +1,5 @@
 include("../src/DataGraphs.jl")
-include("matrix_test.jl")
+#include("matrix_test.jl")
 dg = DataGraphs.DataGraph()
 
 DataGraphs.add_node!(dg, 1)

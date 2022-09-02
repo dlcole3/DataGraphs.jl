@@ -15,15 +15,13 @@ mutable struct DataGraph{T} <: AbstractDataGraph{T}
     node_data::NamedArray
     edge_data::NamedArray
     node_positions::Array{Union{GeometryBasics.Point{2,Float64}, Array{Float64, 2}},1}
-
-    adj_mat::Union{Array{Int}, Nothing}
 end
 
 function Base.eltype(datagraph::DataGraph)
-    return eltype(datagraph.fadjlist)
+    return eltype(eltype(datagraph.fadjlist))
 end
 
-function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}} = Vector{Tuple{Int, Int}}();
+function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}} = Vector{Tuple{Int, Int}}(),
     ne::Int = length(edges),
     fadjlist::Vector{Vector{T}} = [Vector{T} for i in 1:length(nodes)],
     node_attributes::Vector{String} = String[],
@@ -32,8 +30,7 @@ function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}
     edges_index::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
     node_data::NamedArray = [],
     edge_data::NamedArray = [],
-    node_positions = [[0.0 0.0]],
-    adj_mat::Union{Array{Int}, Nothing} = nothing
+    node_positions = [[0.0 0.0]]
 ) where T <: Int
 
     if length(edges) != ne
@@ -49,7 +46,7 @@ function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}
     DataGraph{T}(
         ne, fadjlist, nodes, edges, nodes_index, edges_index,
         node_attributes, edge_attributes, node_data, edge_data,
-        node_positions, adj_mat
+        node_positions
     )
 end
 
@@ -67,12 +64,11 @@ function DataGraph()
     node_data = []
     edge_data = []
     node_positions = [[0.0 0.0]]
-    adj_mat = nothing
 
     DataGraph{Int}(
         ne, fadjlist, nodes, edges, nodes_index, edges_index,
         node_attributes, edge_attributes, node_data, edge_data,
-        node_positions, adj_mat
+        node_positions
     )
 end
 
@@ -267,6 +263,5 @@ function create_adj_mat(g::DataGraph; sparse::Bool = true)
        mat[i[2], i[1]] = 1
     end
 
-    g.adj_mat = mat
     return mat
 end

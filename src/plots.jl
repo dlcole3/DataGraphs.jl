@@ -1,6 +1,5 @@
 function plot_graph(g::DataGraph;
-    get_new_positions::Bool=true,
-    save_pos::Bool=true,
+    get_new_positions::Bool=false,
     plot_edges::Bool=true,
     C::Real=1.0,
     K::Real=.1,
@@ -21,23 +20,14 @@ function plot_graph(g::DataGraph;
 
     am = create_adj_mat(g)
 
-    if get_new_positions
+    if get_new_positions || length(g.node_positions) <= 1
         pos = NetworkLayout.sfdp(Graphs.SimpleGraph(am); tol = tol, C = C, K = K, iterations = iterations)
+        g.node_positions = pos
     else
         pos = g.node_positions
     end
 
-    if save_pos
-        g.node_positions = pos
-    end
-
-    if !get_new_positions && length(g.node_positions) == 0
-        error("No positions in graph")
-    end
-
     plt = scatter([i[1] for i in pos], [i[2] for i in pos];markercolor=markercolor, markersize=markersize, plt_options...)
-
-    node_dict = g.node_map
 
     if plot_edges
         for i in g.edges

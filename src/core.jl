@@ -12,8 +12,8 @@ mutable struct DataGraph{T} <: AbstractDataGraph{T}
     node_attributes::Vector{String}
     edge_attributes::Vector{String}
 
-    node_data::NamedArray
-    edge_data::NamedArray
+    node_data::NamedArrays.NamedArray
+    edge_data::NamedArrays.NamedArray
     node_positions::Array{Union{GeometryBasics.Point{2,Float64}, Array{Float64, 2}},1}
 end
 
@@ -28,8 +28,8 @@ function DataGraph(nodes::Vector{Any} = Vector{Any}(), edges::Vector{Tuple{T, T}
     edge_attributes::Vector{String} = String[],
     node_map::Dict{Any, Int} = Dict{Any, Int}(),
     edge_map::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
-    node_data::NamedArray = [],
-    edge_data::NamedArray = [],
+    node_data::NamedArrays.NamedArray = [],
+    edge_data::NamedArrays.NamedArray = [],
     node_positions = [[0.0 0.0]]
 ) where T <: Int
 
@@ -103,7 +103,7 @@ function add_node!(g::DataGraph,node_name::Any)
         # the end of the weight array for the new node
         if length(attributes)>0
             node_data = g.node_data
-            row_to_add = NamedArray(fill(NaN, (1, length(attributes))))
+            row_to_add = NamedArrays.NamedArray(fill(NaN, (1, length(attributes))))
             node_data = vcat(node_data, row_to_add)
             setnames!(node_data, attributes, 2)
             g.node_data = node_data
@@ -165,7 +165,7 @@ function add_edge!(g::DataGraph, node1::Any, node2::Any)
 
         if length(attributes)>0
             edge_data = g.edge_data
-            row_to_add = NamedArray(fill(NaN, (1,length(attributes))))
+            row_to_add = NamedArrays.NamedArray(fill(NaN, (1,length(attributes))))
             edge_data = vcat(edge_data, row_to_add)
             setnames!(edge_data, attributes, 2)
             g.edge_data = edge_data
@@ -189,7 +189,7 @@ function add_node_data!(g::DataGraph, node::Any, node_weight::Number, attribute:
     end
 
     if length(attributes) < 1
-        node_data = NamedArray(fill(NaN, (length(nodes), 1)), (1:length(nodes),[attribute]))
+        node_data = NamedArrays.NamedArray(fill(NaN, (length(nodes), 1)), (1:length(nodes),[attribute]))
         g.node_data = node_data
         push!(attributes, attribute)
     end
@@ -197,7 +197,7 @@ function add_node_data!(g::DataGraph, node::Any, node_weight::Number, attribute:
     if !(attribute in attributes)
         # Add new column to node_weight array
         push!(attributes, attribute)
-        new_col = NamedArray(fill(NaN, length(nodes)), nodes)
+        new_col = NamedArrays.NamedArray(fill(NaN, length(nodes)), nodes)
         node_data = hcat(node_data, new_col)
         setnames!(node_data, attributes, 2)
         node_data[node_map[node], attribute] = node_weight
@@ -225,7 +225,7 @@ function add_edge_data!(g::DataGraph, node1::Any, node2::Any, edge_weight::Real,
     end
 
     if length(attributes) == 0
-        new_array = NamedArray(fill(NaN, (length(edge_array), 1)), (1:length(edge_array),[attribute]))
+        new_array = NamedArrays.NamedArray(fill(NaN, (length(edge_array), 1)), (1:length(edge_array),[attribute]))
         g.edge_data = new_array
         push!(attributes, attribute)
     end
@@ -234,7 +234,7 @@ function add_edge_data!(g::DataGraph, node1::Any, node2::Any, edge_weight::Real,
         edge_data = g.edge_data
         # Add new column to node_weight array
         push!(attributes, attribute)
-        new_col = NamedArray(fill(NaN, length(edge_array)), edge_array)
+        new_col = NamedArrays.NamedArray(fill(NaN, length(edge_array)), edge_array)
         edge_data = hcat(edge_data, new_col)
         setnames!(edge_data, attributes, 2)
         edge_data[edge_map[edge], attribute] = edge_weight
@@ -242,13 +242,12 @@ function add_edge_data!(g::DataGraph, node1::Any, node2::Any, edge_weight::Real,
         edge_data = g.edge_data
         edge_data[edge_map[edge], attribute] = edge_weight
     end
-
 end
 
 function create_adj_mat(g::DataGraph; sparse::Bool = true)
     nodes       = g.nodes
     edges       = g.edges
-    node_map = g.node_map
+    node_map    = g.node_map
 
     nn = length(nodes)
 

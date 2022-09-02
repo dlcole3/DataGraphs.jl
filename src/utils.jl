@@ -17,7 +17,7 @@ function matrix_to_graph(matrix, weight_name::String="weight")
     nodes     = Vector{Any}()
     node_map  = Dict{Any, Int}()
     edge_map  = Dict{Tuple{Int, Int}, Int}()
-    node_data = NamedArray(fill(NaN, (dim1*dim2,1)))
+    node_data = NamedArrays.NamedArray(fill(NaN, (dim1*dim2,1)))
     setnames!(node_data, [weight_name], 2)
 
     for j in 1:dim2
@@ -101,7 +101,7 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     node_attributes = g.node_attributes
     edge_attributes = g.edge_attributes
     node_data       = g.node_data
-    node_index      = g.node_index
+    node_map        = g.node_map
     nodes           = g.nodes
     edge_data       = g.edge_data
     edge_map        = g.edge_map
@@ -130,7 +130,7 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
         new_g.node_positions  = new_node_pos
     end
 
-    new_node_index = Dict()
+    new_node_map = Dict()
 
     new_edges      = []
     new_edge_index = Dict()
@@ -138,7 +138,7 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     fadjlist       = [Vector{T}() for i in 1:length(new_nodes)]
 
     for i in 1:length(new_nodes)
-        new_node_index[new_nodes[i]] = i
+        new_node_map[new_nodes[i]] = i
     end
 
     for j in 1:length(new_nodes)
@@ -156,7 +156,7 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
                 index = searchsortedfirst(node_neighbors, i)
                 insert!(node_neighbors, index, i)
 
-                old_edge = _get_node(node_map(new_nodes[j]), node_map(new_nodes[i]))
+                old_edge = _get_edge(node_map[new_nodes[j]], node_map[new_nodes[i]])
                 if old_edge in edges
                     push!(old_edge_map, edge_map[old_edge])
                 end
@@ -173,9 +173,9 @@ function filter_nodes(g::DataGraph, filter_val::Real; attribute::String=g.node_a
     new_g.fadjlist        = fadjlist
     new_g.nodes           = new_nodes
     new_g.edges           = new_edges
-    new_g.edge_map     = new_edge_index
-    new_g.node_map     = new_node_index
-    new_g.node_attributes = attributes
+    new_g.edge_map        = new_edge_index
+    new_g.node_map        = new_node_map
+    new_g.node_attributes = node_attributes
     new_g.edge_attributes = edge_attributes
     new_g.node_data       = new_node_data
     new_g.node_positions  = new_node_pos
@@ -189,7 +189,7 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
     node_attributes = g.node_attributes
     edge_attributes = g.edge_attributes
     edge_data       = g.edge_data
-    node_index      = g.node_map
+    node_map        = g.node_map
 
     if length(edge_attributes) == 0
         error("No node weights are defined")
@@ -226,7 +226,7 @@ function filter_edges(g::DataGraph, filter_val::Real; attribute::String = g.edge
     new_g.nodes           = nodes
     new_g.edges           = new_edges
     new_g.edge_data       = new_edge_data
-    new_g.node_map        = node_index
+    new_g.node_map        = node_map
     new_g.edge_map     = new_edge_index
     new_g.node_attributes = node_attributes
     new_g.edge_attributes = edge_attributes
@@ -452,7 +452,7 @@ function aggregate(g::DataGraph, node_set, new_name)
             new_edge_data[new_index, :] = edge_data_avg[:]
         end
 
-        new_edge_data = NamedArray(new_edge_data)
+        new_edge_data = NamedArrays.NamedArray(new_edge_data)
         setnames!(new_edge_data, edge_attributes, 2)
 
         new_g.edge_attributes = edge_attributes

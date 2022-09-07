@@ -79,7 +79,7 @@ function symmetric_matrix_to_graph(matrix, weight_name::String="weight", tol = 1
 
     for j in 1:dim2
         for i in j:dim1
-            add_edge!(dg, i, j)
+            Graphs.add_edge!(dg, i, j)
             add_edge_data!(dg, i, j, matrix[i,j], weight_name)
         end
     end

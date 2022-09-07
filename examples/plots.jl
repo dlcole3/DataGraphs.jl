@@ -1,4 +1,4 @@
-using Plots, NetworkLayout
+using Plots, NetworkLayout, GeometryBasics
 
 function plot_graph(g::DataGraph;
     get_new_positions::Bool=false,

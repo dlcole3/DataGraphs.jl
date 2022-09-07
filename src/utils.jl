@@ -64,7 +64,7 @@ function matrix_to_graph(matrix, weight_name::String="weight")
     return dg
 end
 
-function sym_matrix_to_graph(matrix, weight_name::String="weight", tol = 1e-9)
+function symmetric_matrix_to_graph(matrix, weight_name::String="weight", tol = 1e-9)
 
     dim1, dim2 = size(matrix)
     if dim1 != dim2

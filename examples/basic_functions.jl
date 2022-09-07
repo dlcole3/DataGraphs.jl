@@ -1,5 +1,6 @@
 using Revise
 using DataGraphs, Graphs
+include("plots.jl")
 
 dg = DataGraph()
 

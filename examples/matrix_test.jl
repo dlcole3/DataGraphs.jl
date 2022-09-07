@@ -1,5 +1,6 @@
 using Revise
 using DataGraphs
+include("plots.jl")
 
 mat = rand(10, 10)
 

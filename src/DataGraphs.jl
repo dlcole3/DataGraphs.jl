@@ -12,5 +12,6 @@ export filter_nodes, filter_edges, run_EC_on_nodes, run_EC_on_edges, aggregate
 include("core.jl")
 include("interface.jl")
 include("utils.jl")
+include("functions.jl")
 
 end

@@ -41,6 +41,8 @@ child = mean(ECs[:,7:30], dims=2)
 plt = plot(thresh, adult, label="Developed")
 plot!(thresh, child, label="Underdeveloped")
 
+
+# Optional plotting
 include("plots.jl")
 
 h = symmetric_matrix_to_graph(data[1,:,:])
@@ -49,9 +51,3 @@ x.nodes = h.nodes
 plot_graph(x)
 h.node_positions = x.node_positions
 plot_graph(h; color=:gray, linealpha=.2, xdim = 400, ydim = 400, save_fig=true, fig_name="full_plot.png")
-new_h = filter_edges(h, .00005)
-plot_graph(new_h;get_new_positions=false, color=:gray, linealpha=.2, markersize=10)
-
-ah = aggregate(h, [1,2,3,4,5,6,7], "agg")
-
-plot_graph(ah;save_pos=false, get_new_positions=false, color=:gray, linealpha=.2, markersize=10)

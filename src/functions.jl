@@ -82,4 +82,42 @@ function Graphs.cycle_basis(dg::DataGraph)
     return cycles
 end
 
-# Add degree function
+function Graphs.indegree(dg::DataGraph)
+    return Graphs.indegree(dg.g)
+end
+
+function Graphs.indegree(dg::DataGraph, node)
+    node_map = dg.node_map
+    return Graphs.indegree(dg::DataGraph, node_map[node])
+end
+
+function Graphs.outdegree(dg::DataGraph)
+    return Graphs.outdegree(dg.g)
+end
+
+function Graphs.outdegree(dg::DataGraph, node)
+    node_map = dg.node_map
+    return Graphs.outdegree(dg::DataGraph, node_map[node])
+end
+
+function Graphs.degree(dg::DataGraph)
+    return Graphs.degree(dg.g)
+end
+
+function Graphs.degree(dg::DataGraph, node)
+    node_map = dg.node_map
+    return Graphs.degree(dg::DataGraph, node_map[node])
+end
+
+function Graphs.degree_histogram(dg::DataGraph)
+    return degree_histogram(dg.g)
+end
+
+function Graphs.degree_centrality(dg::DataGraph)
+    return degree_centrality(dg.g)
+end
+
+function average_degree(dg::DataGraph)
+    degrees = Graphs.degree(dg)
+    return sum(degrees) / length(degrees)
+end

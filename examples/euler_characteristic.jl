@@ -3,6 +3,9 @@ using DataGraphs, Graphs
 using JLD, LinearAlgebra
 using Plots, Statistics
 
+# Data for this example comes from Alex Smith's paper on the Euler Characteristic:
+# https://doi.org/10.1016/j.compchemeng.2021.107463
+
 data = JLD.load("examples/brain.jld")["data"]
 thresh = 0:.0002:.2
 

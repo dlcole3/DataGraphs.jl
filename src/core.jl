@@ -130,38 +130,6 @@ function DataGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Matr
 end
 
 DataGraph() = DataGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
-#=
-function DataGraph(adj_mat::Matrix{Real})
-
-    dima, dimb = size(adj_mat)
-    isequal(dima, dimb) || throw(ArgumentError("Adjacency / distance matrices must be square"))
-    issymmetric(adjmx) || throw(ArgumentError("Adjacency / distance matrices must be symmetric"))
-
-    @inbounds for i in findall(triu(adjmx) .!= 0)
-        add_edge!(g, i[1], i[2])
-    end
-
-    node_num = size(adj_mat, 1)
-
-    nodes = [i for i in 1:node_num]
-
-    for i in 1:node_num
-        for j in 1:(node_num - 1)
-
-
-    nodes::Vector{Any},
-    edges::Vector{Tuple{T, T}};
-    ne::T = length(edges),
-    fadjlist::Vector{Vector{T}} = [Vector{Int} for i in 1:length(nodes)],
-    node_attributes::Vector{String} = String[],
-    edge_attributes::Vector{String} = String[],
-    node_map::Dict{Any, Int} = Dict{Any, Int}(),
-    edge_map::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
-    node_data::M1 = Array{Float64}(undef, 0, 0),
-    edge_data::M2 = Array{Float64}(undef, 0, 0),
-    node_positions = [[0.0 0.0]]
-end
-=#
 
 #TODO: Add constructor for edge list or adjacency matrix
 
@@ -357,4 +325,9 @@ function create_adj_mat(dg::DataGraph; sparse::Bool = true)
     end
 
     return mat
+end
+
+function adjacency_matrix(dg::DataGraph)
+    am = Graphs.LinAlg.adjacency_matrix(dg.g)
+    return am
 end

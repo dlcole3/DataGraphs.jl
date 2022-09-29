@@ -194,7 +194,7 @@ function filter_nodes(dg::DataGraph, filter_val::Real; attribute::String=g.node_
 
     new_dg = DataGraph()
 
-    am = create_adj_mat(dg)
+    am = adjacency_matrix(dg)
 
     bool_vec = node_data[:, node_attribute_map[attribute]] .< filter_val
 

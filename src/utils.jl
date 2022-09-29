@@ -331,7 +331,7 @@ function run_EC_on_nodes(dg::DataGraph, thresh; attribute::String = dg.node_data
 
     node_attribute_map = dg.node_data.attribute_map
 
-    am = create_adj_mat(dg)
+    am = Graphs.LinAlg.adjacency_matrix(dg.g)
 
     for i in 1:length(nodes)
         if am[i, i] == 1
@@ -345,7 +345,7 @@ function run_EC_on_nodes(dg::DataGraph, thresh; attribute::String = dg.node_data
         bool_vec  = node_data[:, node_attribute_map[attribute]] .< i
         new_am    = am[bool_vec, bool_vec]
         num_nodes = sum(bool_vec)
-        num_edges = sum(new_am) / 2
+        num_edges = sum(new_am.nzval) / 2
         ECs[j]    = num_nodes - num_edges
     end
 
@@ -449,13 +449,12 @@ function aggregate(dg::DataGraph, node_set, new_name)
 
     fadjlist = [Vector{T}() for i in 1:length(new_nodes)]
 
-    node_name_mapping = Dict{T, Any}()
-    new_edges         = Vector{Tuple{T, T}}()
-    new_edge_map      = Dict{Tuple{T, T}, T}()
-    edge_bool_vec     = [false for i in 1:length(edges)]
-    #edge_bool_vec_avg = [false for i in 1:length(edges)]
+    node_name_mapping   = Dict{T, Any}()
+    new_edges           = Vector{Tuple{T, T}}()
+    new_edge_map        = Dict{Tuple{T, T}, T}()
+    edge_bool_vec       = [false for i in 1:length(edges)]
     edge_bool_avg_index = Dict{Tuple{T, T}, Vector{T}}()
-    new_edge_data = fill(NaN, (0, length(edge_attributes)))
+    new_edge_data       = fill(NaN, (0, length(edge_attributes)))
 
     for i in 1:length(nodes)
         node_name_mapping[node_map[nodes[i]]] = nodes[i]
@@ -558,7 +557,6 @@ function aggregate(dg::DataGraph, node_set, new_name)
     new_dg.node_map = new_node_dict
     new_dg.edges    = new_edges
     new_dg.edge_map = new_edge_map
-
 
     return new_dg
 end

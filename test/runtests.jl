@@ -70,3 +70,7 @@ add_edge_data!(dg, edges[2][1], edges[2][2], edge_data[2], "weight")
     @test dg.edge_data.data[:, 1] == edge_data
     @test dg.edge_data.attributes == ["weight"]
 end
+
+# Add constructor tests
+# Add adjacency matrix test
+# Add functionality tests like matrix_to_graph and tensor_to_graph

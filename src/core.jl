@@ -131,11 +131,11 @@ end
 
 DataGraph() = DataGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
 
-function DataGraph(adj_mat::Matrix{Real})
+function DataGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
 
     dima, dimb = size(adj_mat)
     isequal(dima, dimb) || throw(ArgumentError("Adjacency / distance matrices must be square"))
-    issymmetric(adjmx) || throw(ArgumentError("Adjacency / distance matrices must be symmetric"))
+    LinearAlgebra.issymmetric(adj_mat) || throw(ArgumentError("Adjacency / distance matrices must be symmetric"))
 
     dg = DataGraph()
 
@@ -146,7 +146,7 @@ function DataGraph(adj_mat::Matrix{Real})
     return dg
 end
 
-function DataGraph(edge_list::Vector{Tuple{Any, Any}})
+function DataGraph(edge_list::Vector{T}) where {T <: Tuple{Any, Any}}
     dg = DataGraph()
 
     for i in edge_list

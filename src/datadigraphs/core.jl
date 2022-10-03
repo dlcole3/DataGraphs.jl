@@ -1,83 +1,12 @@
-function NodeData(
-    attributes::Vector{String} = Vector{String}(),
-    attribute_map::Dict{String, Int} = Dict{String, Int}(),
-    data::M = Array{Float64}(undef, 0, 0)
-) where {T, M <: Matrix{T}}
-    NodeData{T, M}(
-        attributes,
-        attribute_map,
-        data
-    )
-end
 
-function EdgeData(
-    attributes::Vector{String} = Vector{String}(),
-    attribute_map::Dict{String, Int} = Dict{String, Int}(),
-    data::M = NamedArray{Float64}(undef, 0, 0)
-) where {T, M <: Matrix{T}}
-    EdgeData{T, M}(
-        attributes,
-        attribute_map,
-        data
-    )
-end
 
-function Base.eltype(datagraph::D) where {D <: DataGraphUnion}
-    return eltype(eltype(datagraph.g.fadjlist))
-end
-
-function DataGraph(
-    nodes::Vector{Any},
-    edges::Vector{Tuple{T, T}};
-    ne::T = length(edges),
-    fadjlist::Vector{Vector{T}} = [Vector{Int} for i in 1:length(nodes)],
-    node_attributes::Vector{String} = String[],
-    edge_attributes::Vector{String} = String[],
-    node_map::Dict{Any, Int} = Dict{Any, Int}(),
-    edge_map::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
-    node_data::M1 = Array{Float64}(undef, 0, 0),
-    edge_data::M2 = Array{Float64}(undef, 0, 0),
-    node_positions = [[0.0 0.0]]
-) where {T <: Int, T1, T2, M1 <: Matrix{T1}, M2 <: Matrix{T2}}
-
-    if length(edges) != ne
-        error("Defined edges do not match ne")
-    end
-    if ne != length(edge_map)
-        error("edge_map does not match the number of edges")
-    end
-    if length(nodes) != length(node_map)
-        error("node_map does not match the number of nodes")
-    end
-
-    g = SimpleGraph(ne, fadjlist)
-
-    node_attribute_map = Dict{String, Int}()
-    edge_attribute_map = Dict{String, Int}()
-
-    for i in 1:length(node_attributes)
-        node_attribute_map[node_attributes[i]] = i
-    end
-
-    for i in 1:length(edge_attributes)
-        edge_attribtue_map[edge_attributes[i]] = i
-    end
-
-    node_data_struct = NodeData(node_attributes, node_attribute_map, node_data)
-    edge_data_struct = EdgeData(edge_attributes, edge_attribute_map, edge_data)
-
-    DataGraph{T, M1, M2}(
-        g, nodes, edges, node_map, edge_map,
-        node_data_struct, edge_data_struct, node_positions
-    )
-end
-
-function DataGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Matrix{T1}, M2 <: Matrix{T2}}
+function DataDiGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Matrix{T1}, M2 <: Matrix{T2}}
     nodes = Vector{Any}()
     edges = Vector{Tuple{Int, Int}}()
 
     ne = 0
     fadjlist = Vector{Vector{Int}}()
+    badjlist = Vector{Vector{Int}}()
 
     node_map = Dict{Any, Int}()
     edge_map = Dict{Tuple{Int, Int}, Int}()
@@ -90,60 +19,47 @@ function DataGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Matr
 
     node_positions = [[0.0 0.0]]
 
-    g = SimpleGraph(ne, fadjlist)
+    g = SimpleDiGraph(ne, fadjlist, badjlist)
 
     node_data_struct = NodeData(node_attributes, node_attribute_map, node_data)
     edge_data_struct = EdgeData(edge_attributes, edge_attribute_map, edge_data)
 
-    DataGraph{T, T1, T2, M1, M2}(
+    DataDiGraph{T, T1, T2, M1, M2}(
         g, nodes, edges, node_map, edge_map,
         node_data_struct, edge_data_struct, node_positions
     )
 end
 
-DataGraph() = DataGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
+DataDiGraph() = DataDiGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
 
-function DataGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
+function DataDiGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
 
     dima, dimb = size(adj_mat)
     isequal(dima, dimb) || throw(ArgumentError("Adjacency / distance matrices must be square"))
     LinearAlgebra.issymmetric(adj_mat) || throw(ArgumentError("Adjacency / distance matrices must be symmetric"))
 
-    dg = DataGraph()
+    dg = DataDiGraph()
 
-    @inbounds for i in findall(LinearAlgebra.triu(adj_mat) .!= 0)
-        Graphs.add_edge!(dg, i[1], i[2])
+    maxc = length(adj_mat.colptr)
+    @inbounds for c = 1:(maxc - 1)
+        for rind = adj_mat.colptr[c]:(adj_mat.colptr[c + 1] - 1)
+            isnz = (adj_mat.nzval[rind] != zero(T))
+            if isnz
+                r = adj_mat.rowval[rind]
+                add_edge!(dg, r, c)
+            end
+        end
     end
-
     return dg
 end
-
-function DataGraph(edge_list::Vector{T}) where {T <: Tuple{Any, Any}}
-    dg = DataGraph()
-
-    for i in edge_list
-        Graphs.add_edge!(dg, i[1], i[2])
-    end
-
-    return dg
-end
-
-function _get_edge(node1_index, node2_index)
-    if node2_index > node1_index
-        return (node1_index, node2_index)
-    else
-        return (node2_index, node1_index)
-    end
-end
-
 
 """
     add_node!(dg, node_name)
 
-Add the node `node_name` to the DataGraph `dg`
+Add the node `node_name` to the DataDiGraph `dg`
 """
 function add_node!(
-    dg::DataGraph, node_name::Any
+    dg::DataDiGraph, node_name::Any
 )
     nodes      = dg.nodes
     attributes = dg.node_data.attributes
@@ -156,6 +72,7 @@ function add_node!(
     if !(node_name in nodes)
         push!(nodes,node_name)
         push!(dg.g.fadjlist, Vector{T}())
+        push!(dg.g.badjlist, Vector{T}())
 
         # If there are data currently defined on the other nodes, add a NaN value to
         # the end of the weight array for the new node
@@ -181,9 +98,9 @@ end
     add_edge!(dg, node_1, node_2)
     add_edge!(dg, (node1, node2))
 
-Add an edge to the DataGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
+Add an edge to the DataDiGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
 """
-function Graphs.add_edge!(dg::DataGraph, node1::Any, node2::Any)
+function Graphs.add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
     edges      = dg.edges
     nodes      = dg.nodes
     attributes = dg.edge_data.attributes
@@ -202,7 +119,7 @@ function Graphs.add_edge!(dg::DataGraph, node1::Any, node2::Any)
     node1_index = node_map[node1]
     node2_index = node_map[node2]
 
-    edge = _get_edge(node1_index, node2_index)
+    edge = (node1_index, node2_index)
 
     # If the edge isn't already defined, then add the edge; add to weight arrays too
     if !(edge in edges)
@@ -213,10 +130,9 @@ function Graphs.add_edge!(dg::DataGraph, node1::Any, node2::Any)
         index = searchsortedfirst(node_neighbors, node2_index)
         insert!(node_neighbors, index, node2_index)
 
-        @inbounds node_neighbors = dg.g.fadjlist[node2_index]
+        @inbounds node_neighbors = dg.g.badjlist[node2_index]
         index = searchsortedfirst(node_neighbors, node1_index)
         insert!(node_neighbors, index, node1_index)
-
 
         if length(attributes)>0
             edge_data  = dg.edge_data.data
@@ -232,11 +148,12 @@ function Graphs.add_edge!(dg::DataGraph, node1::Any, node2::Any)
     end
 end
 
-function Graphs.add_edge!(dg::DataGraph, edge::Tuple{Any, Any})
-    Graphs.add_edge!(dg::DataGraph, edge[1], edge[2])
+function Graphs.add_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
+    Graphs.add_edge!(dg, edge[1], edge[2])
 end
 
-function add_node_data!(dg::DataGraph, node::Any, node_weight::Number, attribute::String)
+
+function add_node_data!(dg::DataDiGraph, node::Any, node_weight::Number, attribute::String)
     nodes         = dg.nodes
     attributes    = dg.node_data.attributes
     node_map      = dg.node_map
@@ -267,7 +184,7 @@ function add_node_data!(dg::DataGraph, node::Any, node_weight::Number, attribute
     end
 end
 
-function add_edge_data!(dg::DataGraph, node1::Any, node2::Any, edge_weight::T, attribute::String) where {T <: Real}
+function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T, attribute::String) where {T <: Real}
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -277,7 +194,7 @@ function add_edge_data!(dg::DataGraph, node1::Any, node2::Any, edge_weight::T, a
     node1_index = node_map[node1]
     node2_index = node_map[node2]
 
-    edge = _get_edge(node1_index, node2_index)
+    edge = (node1_index, node2_index)
 
     if !(edge in edges)
         error("edge does not exist in graph")
@@ -305,11 +222,6 @@ function add_edge_data!(dg::DataGraph, node1::Any, node2::Any, edge_weight::T, a
     end
 end
 
-function add_edge_data!(dg::DataGraph, edge::Tuple{Any, Any}, edge_weight::T, attribute::String) where {T <: Real}
+function add_edge_data!(dg::DataDiGraph, edge::Tuple{Any, Any}, edge_weight::T, attribute::String) where {T <: Real}
     add_edge_data!(dg, edge[1], edge[2], edge_weight, attribute)
-end
-
-function adjacency_matrix(dg::D) where {D <: DataGraphUnion}
-    am = Graphs.LinAlg.adjacency_matrix(dg.g)
-    return am
 end

@@ -1,5 +1,3 @@
-abstract type AbstractDataGraph{T} <: Graphs.AbstractGraph{T} end
-
 function NodeData(
     attributes::Vector{String} = Vector{String}(),
     attribute_map::Dict{String, Int} = Dict{String, Int}(),
@@ -23,9 +21,6 @@ function EdgeData(
         data
     )
 end
-
-
-DataGraphUnion = Union{DataGraph, DataDiGraph}
 
 function Base.eltype(datagraph::D) where {D <: DataGraphUnion}
     return eltype(eltype(datagraph.g.fadjlist))

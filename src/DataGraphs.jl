@@ -60,6 +60,6 @@ include("datagraphs/core.jl")
 include("datadigraphs/core.jl")
 include("datagraphs/interface.jl")
 include("datagraphs/utils.jl")
-include("datagraphs/functions.jl")
+include("functions.jl")
 
 end

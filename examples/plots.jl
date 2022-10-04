@@ -1,4 +1,4 @@
-using Plots, NetworkLayout, GeometryBasics
+using Plots, NetworkLayout, GeometryBasics, Graphs
 
 function plot_graph(g::DataGraph;
     get_new_positions::Bool=false,
@@ -22,7 +22,7 @@ function plot_graph(g::DataGraph;
     plt_options = Dict(:framestyle => :box, :grid => false, :size => (xdim,ydim), :axis => nothing, :legend => legend)
     line_options = Dict(:linecolor => color, :linewidth => linewidth, :linealpha => linealpha)
 
-    am = create_adj_mat(g)
+    am = DataGraphs.adjacency_matrix(g)
 
     if get_new_positions || length(g.node_positions) <= 1
         pos = NetworkLayout.sfdp(Graphs.SimpleGraph(am); tol = tol, C = C, K = K, iterations = iterations)

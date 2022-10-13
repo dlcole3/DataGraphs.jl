@@ -1,4 +1,4 @@
-function get_node_data(dg::DataGraphUnion, node::Any, attribute::String=dg.node_data.attributes[1])
+function get_node_data(dg::DataGraph, node::Any, attribute::String=dg.node_data.attributes[1])
     node_map  = dg.node_map
     node_data = dg.node_data
     attribute_map = node_data.attribute_map

@@ -1,7 +1,15 @@
+"""
+    NodeData(attributes = Vector{String}(),
+        attribute_map = Dict{String, Int}(),
+        data = Array{Float64}(undef, (0, 0))
+    )
+
+Constructor for building NodeData{T, M}
+"""
 function NodeData(
     attributes::Vector{String} = Vector{String}(),
     attribute_map::Dict{String, Int} = Dict{String, Int}(),
-    data::M = Array{Float64}(undef, 0, 0)
+    data::M = Array{Float64}(undef, (0, 0))
 ) where {T, M <: Matrix{T}}
     NodeData{T, M}(
         attributes,
@@ -10,10 +18,18 @@ function NodeData(
     )
 end
 
+"""
+    EdgeData(attributes = Vector{String}(),
+        attribute_map = Dict{String, Int}(),
+        data = Array{Float64}(undef, (0, 0))
+    )
+
+Constructor for building EdgeData{T, M}
+"""
 function EdgeData(
     attributes::Vector{String} = Vector{String}(),
     attribute_map::Dict{String, Int} = Dict{String, Int}(),
-    data::M = NamedArray{Float64}(undef, 0, 0)
+    data::M = NamedArray{Float64}(undef, (0, 0))
 ) where {T, M <: Matrix{T}}
     EdgeData{T, M}(
         attributes,
@@ -143,8 +159,8 @@ end
 Add the node `node_name` to the DataGraph `dg`
 """
 function add_node!(
-    dg::DataGraph, node_name::Any
-)
+    dg::DataGraph, node_name::N
+) where {N <: Any}
     nodes      = dg.nodes
     attributes = dg.node_data.attributes
     node_map   = dg.node_map
@@ -183,7 +199,7 @@ end
 
 Add an edge to the DataGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
 """
-function Graphs.add_edge!(dg::DataGraph, node1::Any, node2::Any)
+function Graphs.add_edge!(dg::DataGraph, node1::N1, node2::N2) where {N1 <: Any, N2 <: Any}
     edges      = dg.edges
     nodes      = dg.nodes
     attributes = dg.edge_data.attributes

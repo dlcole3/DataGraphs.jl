@@ -1,18 +1,11 @@
 using Revise
 using DataGraphs, Graphs
-using DelimitedFiles
+using JLD
 
 # Read in the simulated liquid crystal (LC) data
 # Data contains 100 x 100 matrices, with the first 100 corresponding to one
 # environment, the last 100 corresponding to another environment
-initial_data = readdlm((@__DIR__)*"/LC_data.csv", ',')
-
-data = Array{Float64, 3}(undef, (200, 100, 100))
-
-for i in 1:200
-    range_values = (1 + (i - 1) * 100):(i * 100)
-    data[i, :, :] = initial_data[range_values, :]
-end
+initial_data = load((@__DIR__)*"/simulated_LC_data.jld")["data"]
 
 # Define the threshold of the EC curve
 thresh = -1.0:.02:1.82

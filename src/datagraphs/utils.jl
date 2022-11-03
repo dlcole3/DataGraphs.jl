@@ -215,7 +215,7 @@ function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_da
     new_edges      = Vector{Tuple{T, T}}()
     new_edge_map   = Dict{Tuple{T, T}, T}()
     old_edge_index = Vector{Int}()
-    fadjlist       = [Vector{T}() for i in 1:length(new_nodes)]
+    fadjlist       = [Vector{T}() for i in 1:length(new_nodes)]  ### TODO: if new_nodes is length 0, this is a vector of type any
 
     for i in 1:length(new_nodes)
         new_node_map[new_nodes[i]] = i

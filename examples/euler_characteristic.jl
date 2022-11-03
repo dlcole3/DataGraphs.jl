@@ -60,11 +60,3 @@ end
 xlabel!("Filtration Threshold")
 ylabel!("Scaled Euler Characteristic")
 display(plt)
-
-
-#h = symmetric_matrix_to_graph(data[1,:,:])
-#x = DataGraph()
-#x.nodes = h.nodes
-#plot_graph(x)
-#h.node_positions = x.node_positions
-#plot_graph(h; color=:gray, linealpha=.2, xdim = 400, ydim = 400, save_fig=true, fig_name="full_plot.png")

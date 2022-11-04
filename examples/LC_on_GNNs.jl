@@ -8,7 +8,9 @@ using CUDA
 
 # I have adapted the code from GraphNeuralNetworks.jl example which can be found at:
 # https://github.com/CarloLucibello/GraphNeuralNetworks.jl/blob/master/examples/graph_classification_tudataset.jl
-# If you do not have a GPU available, you may need to change the "usecuda" argument in line 55 to false
+# If you do not have a GPU available, you may need to change the "usecuda" argument in line 57 to false
+# Data used in this example is simulated data from Smith and Zavala, 2021
+# https://doi.org/10.1016/j.compchemeng.2021.107463
 
 # Define function to give testing and training loss and accuracy
 function eval_loss_accuracy(model, data_loader, device)

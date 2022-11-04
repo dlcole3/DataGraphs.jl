@@ -24,7 +24,7 @@ function eval_loss_accuracy(model, data_loader, device)
         n = length(y[1,:])
         ŷ = model(g, g.ndata.x)# |> vec
 
-        y_test = zeros(n) |> device
+        y_test = zeros(n)
         for i in 1:n
             argmax_ind     = argmax(y[:, i])[1]
             argmax_ind_hat = argmax(ŷ[:, i])[1]
@@ -65,7 +65,7 @@ end
 Base.@kwdef mutable struct Args
     η = 1f-3            # learning rate
     batchsize = 32      # batch size (number of graphs in each batch)
-    epochs = 150        # number of epochs
+    epochs = 200        # number of epochs
     seed = 17           # set seed > 0 for reproducibility
     usecuda = true      # if true use cuda (if available)
     nhidden = 32        # dimension of hidden features
@@ -155,7 +155,9 @@ Xs, ys = shuffleobs(dataset)
 
 accuracy_values = []
 
-@time begin
+train((Xs, ys), args)
+
+a = @time begin
     for (train_data, test_data) in kfolds((Xs, ys); k = 5)
 
         op1 = train(train_data, args)
@@ -178,4 +180,7 @@ accuracy_values = []
     end
 end
 
+
+println(accuracy_values)
 println(mean(accuracy_values))
+println(a)

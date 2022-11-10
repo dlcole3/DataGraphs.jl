@@ -28,12 +28,12 @@ DataGraphs.jl is designed to store data within the graph structure and to manipu
 Datagraphs.jl uses an object `DataGraph` (or `DataDiGraph` for directed graphs) to store information. These objects contain the following features:
 
  * `g`: `SimpleGraph` (or `SimpleDiGraph` for directed graphs) containing the graph structure.
- * `nodes`: A vector of nodes, where the entries of the vector are node names. These names are of type `Any` so that the nodes can use a variety of naming conventions (streams, symbols, tuples, etc.)
+ * `nodes`: A vector of nodes, where the entries of the vector are node names. These names are of type `Any` so that the nodes can use a variety of naming conventions (strings, symbols, tuples, etc.)
  * `edges`: A vector of tuples, where each tuple contains two entries, where each entry relates to a node. 
  * `node_map`: A dictionary that maps the node names to their index in the `nodes` vector
  * `edge_map`: A dictionary that maps the edges to their index in the `edges` vector.
  * `node_data`: An object of type `NodeData` that includes a matrix of data, where the first dimension of the matrix corresponds to the node, and the second dimension corresponds to attributes for the nodes. Any number of attributes is allowed, and `NodeData` also includes attribute names and a mapping of the attribute name to the column of the data matrix. 
- * `edge_data`: An object of type `EdgeData` that includes a matrix of data, where the first dimension fo the matrix corresponds to then ode, and the second dimension corresponds to attributes for the nodes. Any number of attributes is allowed, and `EdgeData` also includes attribute names and a mpaping of the attribute name to the column of the data matrix. 
+ * `edge_data`: An object of type `EdgeData` that includes a matrix of data, where the first dimension fo the matrix corresponds to the edges, and the second dimension corresponds to attributes for the edges. Any number of attributes is allowed, and `EdgeData` also includes attribute names and a mapping of the attribute name to the column of the data matrix. 
  * `node_positions`: Contains an empty vector that is initialized when plotting a graph. Values here are used by DataGraphPlots.jl.
 
 DataGraphs.jl includes several functions for building graphs from specific data structures, including functions like `matrix_to_graph`, `symmetric_matrix_to_graph`, and `tensor_graph` which build specific graph structures an save data to those structures. 
@@ -77,7 +77,6 @@ Note that for `DataGraph`s, the order of the edges is not important, but it is i
 There are also functions for direclty building a graph from a set of data. Examples are shown below.
 
 ```julia
-
 random_matrix = rand(20, 20)
 
 matrix_graph = matrix_to_graph(random_matrix, "matrix_weight")

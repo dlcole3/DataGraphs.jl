@@ -136,4 +136,4 @@ function train(; kws...)
     return model
 end
 
-@time model = train()
+model = train()

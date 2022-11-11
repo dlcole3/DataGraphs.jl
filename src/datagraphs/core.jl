@@ -152,7 +152,7 @@ function DataGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
     dg = DataGraph()
 
     @inbounds for i in findall(LinearAlgebra.triu(adj_mat) .!= 0)
-        Graphs.add_edge!(dg, i[1], i[2])
+        DataGraphs.add_edge!(dg, i[1], i[2])
     end
 
     return dg
@@ -168,7 +168,7 @@ function DataGraph(edge_list::Vector{T}) where {T <: Tuple{Any, Any}}
     dg = DataGraph()
 
     for i in edge_list
-        Graphs.add_edge!(dg, i[1], i[2])
+        DataGraphs.add_edge!(dg, i[1], i[2])
     end
 
     return dg
@@ -229,7 +229,7 @@ end
 
 Add an edge to the DataGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
 """
-function Graphs.add_edge!(dg::DataGraph, node1::N1, node2::N2) where {N1 <: Any, N2 <: Any}
+function add_edge!(dg::DataGraph, node1::N1, node2::N2) where {N1 <: Any, N2 <: Any}
     edges      = dg.edges
     nodes      = dg.nodes
     attributes = dg.edge_data.attributes
@@ -278,8 +278,8 @@ function Graphs.add_edge!(dg::DataGraph, node1::N1, node2::N2) where {N1 <: Any,
     end
 end
 
-function Graphs.add_edge!(dg::DataGraph, edge::Tuple{Any, Any})
-    Graphs.add_edge!(dg::DataGraph, edge[1], edge[2])
+function add_edge!(dg::DataGraph, edge::Tuple{Any, Any})
+    DataGraphs.add_edge!(dg::DataGraph, edge[1], edge[2])
 end
 
 """

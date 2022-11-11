@@ -46,7 +46,7 @@ function DataDiGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
             isnz = (adj_mat.nzval[rind] != zero(T))
             if isnz
                 r = adj_mat.rowval[rind]
-                add_edge!(dg, r, c)
+                DataGraphs.add_edge!(dg, r, c)
             end
         end
     end
@@ -100,7 +100,7 @@ end
 
 Add an edge to the DataDiGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
 """
-function Graphs.add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
+function add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
     edges      = dg.edges
     nodes      = dg.nodes
     attributes = dg.edge_data.attributes
@@ -148,8 +148,8 @@ function Graphs.add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
     end
 end
 
-function Graphs.add_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
-    Graphs.add_edge!(dg, edge[1], edge[2])
+function add_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
+    DataGraphs.add_edge!(dg, edge[1], edge[2])
 end
 
 

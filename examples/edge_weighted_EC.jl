@@ -32,7 +32,7 @@ for i in 1:30
 
     for j in 1:39
         for k in 1:39
-            add_edge!(dg, k, j)
+            DataGraphs.add_edge!(dg, k, j)
             add_edge_data!(dg, k, j, datai[k,j], "weight")
         end
     end

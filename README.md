@@ -40,6 +40,8 @@ DataGraphs.jl includes several functions for building graphs from specific data 
 
 Datagraphs.jl also includes functions for manipulating graph structure and analyzing the resulting topology of those structures. Functions `filter_nodes`, `filter_edges`, or `aggregate` change the graph structure based on the arguments passed to the functions. There are also functions such as `get_EC`, `run_EC_on_nodes`, and `run_EC_on_edges` that get the Euler Characteristic or the Euler Characteristic Curve for a graph, and other functions such as `cycle_basis`, `diameter`, or `average_degree` (largely extensions of Graphs.jl) for finding other topological descriptors. 
 
+Support for `DataDiGraph`s is still underway. However, for `DataGraph` objects, all functions shown above have doc strings, which can be accessed through the REPL by first typing `?` and then the function or object name. 
+
 ## Getting Started
 
 A `DataGraph` can be initiated by calling 

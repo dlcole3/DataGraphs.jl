@@ -1,5 +1,18 @@
 
 
+
+"""
+    DataDiGraph{T, T1, T2, M1, M2}()
+    DataDiGraph()
+
+Constructor for initializing and empty DataDiGraph object. Datatypes are as follows: T is the
+integer type for indexing, T1 and T2 are the data type in the node and edge data respectively,
+and M1 <: AbstractMatrix{T1} corresponds to the node data and M2 <: AbstractMatrix{T2} corresponds
+to the edge data.
+
+When T, T1, T2, M1, and M2 are not defined, the defaults are `Int`, `Float64`, `Float64`,
+`Matrix{Float64}`, and `Matrix{Float64}` respectively.
+"""
 function DataDiGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Matrix{T1}, M2 <: Matrix{T2}}
     nodes = Vector{Any}()
     edges = Vector{Tuple{Int, Int}}()
@@ -32,6 +45,12 @@ end
 
 DataDiGraph() = DataDiGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
 
+
+"""
+    DataDiGraph(adjacency_matrix::AbstractMatrix)
+
+Constructor for building a DataDiGraph object from an adjacency matrix.
+"""
 function DataDiGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
 
     dima, dimb = size(adj_mat)
@@ -153,6 +172,13 @@ function add_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
 end
 
 
+"""
+    add_node_data!(datadigraph, node_name, node_weight, attribute_name)
+
+Add a weight value for the given node name in the DataDiGraph object. User must pass an "attribute
+name" for the given weight. All other nodes that do not have a node_weight value defined for
+that attribute name default to a value of zero.
+"""
 function add_node_data!(dg::DataDiGraph, node::Any, node_weight::Number, attribute::String)
     nodes         = dg.nodes
     attributes    = dg.node_data.attributes
@@ -184,6 +210,16 @@ function add_node_data!(dg::DataDiGraph, node::Any, node_weight::Number, attribu
     end
 end
 
+
+"""
+    add_edge_data!(datadigraph, node_name1, node_name2, edge_weight, attribute_name)
+    add_edge_data!(datadigraph, edge, edge_weight, attribute_name)
+
+Add a weight value for the edge between node_name1 and node_name2 in the DataDiGraph object.
+When using the second function, `edge` must be a tuple with two node names. User must pass
+an "attribute name" for the given weight. All other edges that do not have an edge_weight
+value defined for that attribute name default to a value of zero.
+"""
 function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T, attribute::String) where {T <: Real}
     edges         = dg.edges
     attributes    = dg.edge_data.attributes

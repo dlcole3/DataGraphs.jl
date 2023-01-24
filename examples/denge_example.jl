@@ -7,11 +7,11 @@ using DataGraphPlots
 # "The Euler characteristic as a topological marker for outbreaks in
 # vector borne disease"
 
-data_any = readdlm((@__DIR__)*"/Recife_data/Dengue_Recife_new_cases_jan_2014_to_dec_2021.csv", ',', skipstart = 1)[:, 2:end]
+full_data = readdlm((@__DIR__)*"/Recife_data/Dengue_Recife_new_cases_jan_2014_to_dec_2021.csv", ',', skipstart = 1)[:, 2:end]
 
-data = Matrix{Float64}(undef, size(data_any))
-
-data .= data_any
+# Set the matrix type to be Int
+data = Matrix{Int}(undef, size(full_data))
+data .= full_data
 
 cor_1 = cor(data[1:30, :], dims = 1)
 

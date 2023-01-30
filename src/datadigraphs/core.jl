@@ -93,11 +93,11 @@ function add_node!(
         push!(dg.g.fadjlist, Vector{T}())
         push!(dg.g.badjlist, Vector{T}())
 
-        # If there are data currently defined on the other nodes, add a NaN value to
+        # If there are data currently defined on the other nodes, add a 0 value to
         # the end of the weight array for the new node
         if length(attributes)>0
             node_data = dg.node_data.data
-            row_to_add = fill(NaN, (1, length(attributes)))
+            row_to_add = fill(0, (1, length(attributes)))
             node_data = vcat(node_data, row_to_add)
             dg.node_data.data = node_data
         end
@@ -155,7 +155,7 @@ function add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
 
         if length(attributes)>0
             edge_data  = dg.edge_data.data
-            row_to_add = fill(NaN, (1, length(attributes)))
+            row_to_add = fill(0, (1, length(attributes)))
             edge_data  = vcat(edge_data, row_to_add)
             dg.edge_data.data = edge_data
         end
@@ -199,7 +199,7 @@ function add_node_data!(dg::DataDiGraph, node::Any, node_weight::Number, attribu
         # Add new column to node_weight array
         push!(attributes, attribute)
         attribute_map[attribute] = length(attributes)
-        new_col = fill(NaN, (length(nodes), 1))
+        new_col = fill(0, (length(nodes), 1))
         node_data = hcat(node_data, new_col)
         node_data[node_map[node], attribute_map[attribute]] = node_weight
         dg.node_data.data = node_data
@@ -246,7 +246,7 @@ function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T,
         # Add new column to node_weight array
         push!(attributes, attribute)
         attribute_map[attribute] = length(attributes)
-        new_col = fill(NaN, (length(edges), 1))
+        new_col = fill(0, (length(edges), 1))
         edge_data = hcat(edge_data, new_col)
         edge_data[edge_map[edge], attribute_map[attribute]] = edge_weight
         dg.edge_data.data = edge_data

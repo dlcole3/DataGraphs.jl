@@ -121,6 +121,8 @@ DataGraphUnion = Union{DataGraph, DataDiGraph}
 
 include("datagraphs/core.jl")
 include("datadigraphs/core.jl")
+include("datadigraphs/utils.jl")
+include("datadigraphs/interface.jl")
 include("datagraphs/interface.jl")
 include("datagraphs/utils.jl")
 include("functions.jl")

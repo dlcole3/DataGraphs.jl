@@ -15,31 +15,13 @@ function get_EC(dg::DataGraph)
 end
 
 """
-    matrix_to_graph(matrix, diagonal = false, attribute="weight")
+    _build_matrix_graph!
 
-Constructs a `DataGraph` object from a matrix and saves the matrix data as node attributes under
-the name `attribute`. If `diagonal = false`, the graph has a mesh structure, where each matrix entry is represented by
-a node, and each node is connected to the adjacent matrix entries/nodes. If `diagonal = true`, entries of the matrix
-are also connected to the nodes diagonal to them (i.e., entry (i,j) is connected to (i-1, j-1), (i + 1, j -1), etc.).
+Constructs the graph structure for the function `matrix_to_graph`
 """
-function matrix_to_graph(matrix::AbstractMatrix, diagonal::Bool = false, attribute::String = "weight")
-
-    dim1, dim2 = size(matrix)
-    dg = DataGraph()
-
-    fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
-    edges     = dg.edges
-    nodes     = dg.nodes
-    node_map  = dg.node_map
-    edge_map  = dg.edge_map
-    node_data = fill(NaN, (dim1*dim2, 1))
-
-    for j in 1:dim2
-        for i in 1:dim1
-            push!(nodes, (i, j))
-            node_map[(i, j)] = length(nodes)
-            node_data[length(nodes), 1] = matrix[i, j]
-        end
+function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, dim2, diagonal)
+    if dim1 == 0 || dim2 == 0
+        error("matrix_to_graph does not support matrices with dimension sizes of 1")
     end
 
     if dim1 > 1 && dim2 > 1
@@ -83,10 +65,85 @@ function matrix_to_graph(matrix::AbstractMatrix, diagonal::Bool = false, attribu
             end
         end
     end
+end
+
+"""
+    matrix_to_graph(matrix, diagonal = true, attribute="weight")
+    matrix_to_graph(array_3d, diagonal = true, attribute_list = ["weight\$i" for i in 1:size(array_3d)[3]])
+
+Constructs a `DataGraph` object from a matrix and saves the matrix data as node attributes under
+the name `attribute`. If `diagonal = false`, the graph has a mesh structure, where each matrix entry is represented by
+a node, and each node is connected to the adjacent matrix entries/nodes. If `diagonal = true`, entries of the matrix
+are also connected to the nodes diagonal to them (i.e., entry (i,j) is connected to (i-1, j-1), (i + 1, j -1), etc.).
+
+If a 3D matrix is passed to the function, it treats the first two dimensions as the matrix and then saves the data in
+the third dimension as different weights (i.e., for array of size dim1, dim2, and dim3, entry (i,j) has dim3 weights).
+`attribute_list` can be defined by the user to give names to each weight in the third dimension.
+"""
+function matrix_to_graph(matrix::AbstractMatrix, diagonal::Bool = true, attribute::String = "weight")
+
+    dim1, dim2 = size(matrix)
+    dg = DataGraph()
+
+    fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
+    edges     = dg.edges
+    nodes     = dg.nodes
+    node_map  = dg.node_map
+    edge_map  = dg.edge_map
+    node_data = fill(0.0, (dim1*dim2, 1))
+
+    for j in 1:dim2
+        for i in 1:dim1
+            push!(nodes, (i, j))
+            node_map[(i, j)] = length(nodes)
+            node_data[length(nodes), 1] = matrix[i, j]
+        end
+    end
+
+    _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, dim2, diagonal)
 
     simple_graph = Graphs.SimpleGraph(length(edges), fadjlist)
     dg.node_data.attributes                 = [attribute]
     dg.node_data.attribute_map[attribute] = 1
+
+    dg.g               = simple_graph
+    dg.nodes           = nodes
+    dg.node_map        = node_map
+    dg.edges           = edges
+    dg.edge_map        = edge_map
+    dg.node_data.data  = node_data
+
+    return dg
+end
+
+function matrix_to_graph(array_3d::AbstractArray{T, 3}, diagonal::Bool = true, attribute_list::Vector{String} = ["weight$i" for i in 1:size(array_3d)[3]]) where {T <: Any}
+
+    dim1, dim2, dim3 = size(array_3d)
+    dg = DataGraph()
+
+    fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
+    edges     = dg.edges
+    nodes     = dg.nodes
+    node_map  = dg.node_map
+    edge_map  = dg.edge_map
+    node_data = fill(0, (dim1*dim2, dim3))
+
+    for j in 1:dim2
+        for i in 1:dim1
+            push!(nodes, (i, j))
+            node_map[(i, j)] = length(nodes)
+            node_data[length(nodes), :] .= array_3d[i, j, :]
+        end
+    end
+
+    _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, dim2, diagonal)
+
+    simple_graph = Graphs.SimpleGraph(length(edges), fadjlist)
+
+    dg.node_data.attributes = attribute_list
+    for (i, attribute) in enumerate(attribute_list)
+        dg.node_data.attribute_map[attribute] = i
+    end
 
     dg.g               = simple_graph
     dg.nodes           = nodes
@@ -258,7 +315,7 @@ function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_da
 
     new_dg = DataGraph()
 
-    am = adjacency_matrix(dg)
+    am = Graphs.LinAlg.adjacency_matrix(dg)
 
     bool_vec = node_data[:, node_attribute_map[attribute]] .< filter_val
 
@@ -563,7 +620,7 @@ function aggregate(dg::DataGraph, node_set, new_name)
     new_edge_map        = Dict{Tuple{T, T}, T}()
     edge_bool_vec       = [false for i in 1:length(edges)]
     edge_bool_avg_index = Dict{Tuple{T, T}, Vector{T}}()
-    new_edge_data       = fill(NaN, (0, length(edge_attributes)))
+    new_edge_data       = fill(0, (0, length(edge_attributes)))
 
     for i in 1:length(nodes)
         node_name_mapping[node_map[nodes[i]]] = nodes[i]
@@ -610,7 +667,7 @@ function aggregate(dg::DataGraph, node_set, new_name)
                 insert!(node_neighbors, index, new_node1)
 
                 if length(edge_attributes) > 0
-                    new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
+                    new_edge_data = vcat(new_edge_data, fill(0, (1, length(edge_attributes))))
                     edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edge_map[edge]])
                 end
             else
@@ -639,7 +696,7 @@ function aggregate(dg::DataGraph, node_set, new_name)
                 insert!(node_neighbors, index, new_node1)
 
                 if length(edge_attributes) > 0
-                    new_edge_data = vcat(new_edge_data, fill(NaN, (1, length(edge_attributes))))
+                    new_edge_data = vcat(new_edge_data, fill(0, (1, length(edge_attributes))))
                     edge_bool_avg_index[(new_node1, new_node2)] = Vector{T}([edge_map[edge]])
                 end
             else

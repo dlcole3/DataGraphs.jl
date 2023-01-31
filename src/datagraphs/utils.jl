@@ -80,17 +80,22 @@ If a 3D matrix is passed to the function, it treats the first two dimensions as 
 the third dimension as different weights (i.e., for array of size dim1, dim2, and dim3, entry (i,j) has dim3 weights).
 `attribute_list` can be defined by the user to give names to each weight in the third dimension.
 """
-function matrix_to_graph(matrix::AbstractMatrix, diagonal::Bool = true, attribute::String = "weight")
+function matrix_to_graph(
+    matrix::AbstractMatrix{T1},
+    diagonal::Bool = true,
+    attribute::String = "weight"
+) where {T1 <: Any}
 
     dim1, dim2 = size(matrix)
-    dg = DataGraph()
+    dg = DataGraph{Int, T1, Float64, Matrix{T1}, Matrix{Float64}}()
+
 
     fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
     edges     = dg.edges
     nodes     = dg.nodes
     node_map  = dg.node_map
     edge_map  = dg.edge_map
-    node_data = fill(0.0, (dim1*dim2, 1))
+    node_data = fill(T1(0), (dim1*dim2, 1))
 
     for j in 1:dim2
         for i in 1:dim1
@@ -116,17 +121,22 @@ function matrix_to_graph(matrix::AbstractMatrix, diagonal::Bool = true, attribut
     return dg
 end
 
-function matrix_to_graph(array_3d::AbstractArray{T, 3}, diagonal::Bool = true, attribute_list::Vector{String} = ["weight$i" for i in 1:size(array_3d)[3]]) where {T <: Any}
+function matrix_to_graph(
+    array_3d::AbstractArray{T1, 3},
+    diagonal::Bool = true,
+    attribute_list::Vector{String} = ["weight$i" for i in 1:size(array_3d)[3]],
+) where {T1 <: Any}
 
     dim1, dim2, dim3 = size(array_3d)
-    dg = DataGraph()
+
+    dg = DataGraph{Int, T1, Float64, Matrix{T1}, Matrix{Float64}}()
 
     fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
     edges     = dg.edges
     nodes     = dg.nodes
     node_map  = dg.node_map
     edge_map  = dg.edge_map
-    node_data = fill(0, (dim1*dim2, dim3))
+    node_data = fill(T1(0), (dim1*dim2, dim3))
 
     for j in 1:dim2
         for i in 1:dim1
@@ -311,9 +321,13 @@ function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_da
         error("No node weights are defined")
     end
 
-    T = eltype(dg)
+    T  = eltype(dg)
+    T1 = eltype(get_node_data(dg))
+    M1 = typeof(get_node_data(dg))
+    T2 = eltype(get_edge_data(dg))
+    M2 = eltype(get_edge_data(dg))
 
-    new_dg = DataGraph()
+    new_dg = DataGraph{T, T1, T2, M1, M2}()
 
     am = Graphs.LinAlg.adjacency_matrix(dg)
 
@@ -410,6 +424,12 @@ function filter_edges(dg::DataGraph, filter_val::R; attribute::String = dg.edge_
     end
 
     T = eltype(dg)
+    T1 = eltype(get_node_data(dg))
+    M1 = typeof(get_node_data(dg))
+    T2 = eltype(get_edge_data(dg))
+    M2 = eltype(get_edge_data(dg))
+
+    new_dg = DataGraph{T, T1, T2, M1, M2}()
 
     bool_vec = dg.edge_data.data[:, edge_attribute_map[attribute]] .< filter_val
 
@@ -434,7 +454,7 @@ function filter_edges(dg::DataGraph, filter_val::R; attribute::String = dg.edge_
         insert!(node_neighbors, index, node1)
     end
 
-    new_dg = DataGraph()
+    new_dg = DataGraph{T, T1, T2, M1, M2}()
 
     simple_graph = Graphs.SimpleGraph(T(length(new_edges)), fadjlist)
 
@@ -558,8 +578,12 @@ function aggregate(dg::DataGraph, node_set, new_name)
     end
 
     T = eltype(dg)
+    T1 = eltype(get_node_data(dg))
+    M1 = typeof(get_node_data(dg))
+    T2 = eltype(get_edge_data(dg))
+    M2 = eltype(get_edge_data(dg))
 
-    new_dg = DataGraph()
+    new_dg = DataGraph{T, T1, T2, M1, M2}()
 
     new_nodes = setdiff(nodes, node_set)
     push!(new_nodes, new_name)

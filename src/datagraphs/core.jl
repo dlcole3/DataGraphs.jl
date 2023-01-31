@@ -109,19 +109,19 @@ When T, T1, T2, M1, and M2 are not defined, the defaults are `Int`, `Float64`, `
 """
 function DataGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: AbstractMatrix{T1}, M2 <: AbstractMatrix{T2}}
     nodes = Vector{Any}()
-    edges = Vector{Tuple{Int, Int}}()
+    edges = Vector{Tuple{T, T}}()
 
     ne = 0
-    fadjlist = Vector{Vector{Int}}()
+    fadjlist = Vector{Vector{T}}()
 
-    node_map = Dict{Any, Int}()
-    edge_map = Dict{Tuple{Int, Int}, Int}()
+    node_map = Dict{Any, T}()
+    edge_map = Dict{Tuple{T, T}, T}()
     node_attributes = String[]
     edge_attributes = String[]
-    node_attribute_map = Dict{String, Int}()
-    edge_attribute_map = Dict{String, Int}()
-    node_data = Array{Float64}(undef, 0, 0)
-    edge_data = Array{Float64}(undef, 0, 0)
+    node_attribute_map = Dict{String, T}()
+    edge_attribute_map = Dict{String, T}()
+    node_data = M1(undef, 0, 0)
+    edge_data = M2(undef, 0, 0)
 
     node_positions = [[0.0 0.0]]
 

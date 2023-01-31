@@ -23,8 +23,12 @@ function filter_nodes(dg::DataDiGraph, filter_val::R; attribute::String=dg.node_
     end
 
     T = eltype(dg)
+    T1 = eltype(get_node_data(dg))
+    M1 = typeof(get_node_data(dg))
+    T2 = eltype(get_edge_data(dg))
+    M2 = eltype(get_edge_data(dg))
 
-    new_dg = DataDiGraph()
+    new_dg = DataDiGraph{T, T1, T2, M1, M2}()
 
     am = Graphs.LinAlg.adjacency_matrix(dg.g)
 
@@ -122,6 +126,10 @@ function filter_edges(dg::DataDiGraph, filter_val::R; attribute::String = dg.edg
     end
 
     T = eltype(dg)
+    T1 = eltype(get_node_data(dg))
+    M1 = typeof(get_node_data(dg))
+    T2 = eltype(get_edge_data(dg))
+    M2 = eltype(get_edge_data(dg))
 
     bool_vec = dg.edge_data.data[:, edge_attribute_map[attribute]] .< filter_val
 
@@ -147,7 +155,7 @@ function filter_edges(dg::DataDiGraph, filter_val::R; attribute::String = dg.edg
         insert!(node_neighbors, index, node1)
     end
 
-    new_dg = DataDiGraph()
+    new_dg = DataDiGraph{T, T1, T2, M1, M2}()
 
     simple_digraph = Graphs.SimpleDiGraph(T(length(new_edges)), fadjlist, badjlist)
 
@@ -198,8 +206,12 @@ function aggregate(dg::DataDiGraph, node_set, new_name)
     end
 
     T = eltype(dg)
+    T1 = eltype(get_node_data(dg))
+    M1 = typeof(get_node_data(dg))
+    T2 = eltype(get_edge_data(dg))
+    M2 = eltype(get_edge_data(dg))
 
-    new_dg = DataDiGraph()
+    new_dg = DataDiGraph{T, T1, T2, M1, M2}()
 
     new_nodes = setdiff(nodes, node_set)
     push!(new_nodes, new_name)

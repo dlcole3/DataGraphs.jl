@@ -30,34 +30,82 @@ function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, 
             for i in 1:dim1
                 if j != dim2
                     edge = (i + column_offset, i + column_offset + dim1)
+
+                    fadjlist1 = fadjlist[i + column_offset]
+                    fadjlist2 = fadjlist[i + column_offset + dim1]
+                    node1 = i + column_offset + dim1
+                    node2 = i + column_offset
+
+                    index1 = searchsortedfirst(fadjlist1, node1)
+                    insert!(fadjlist1, index1, node1)
+
+                    index2 = searchsortedfirst(fadjlist2, node2)
+                    insert!(fadjlist2, index2, node2)
+
+                    #push!(fadjlist[i + column_offset], i + column_offset + dim1)
+                    #push!(fadjlist[i + column_offset + dim1], i + column_offset)
                     push!(edges, edge)
-                    push!(fadjlist[i + column_offset], i + column_offset + dim1)
-                    push!(fadjlist[i + column_offset + dim1], i + column_offset)
                     edge_map[edge] = length(edges)
                 end
 
                 if i != dim1
                     edge = (i + column_offset, i + column_offset + 1)
-                    push!(fadjlist[i + column_offset], i + column_offset + 1)
-                    push!(fadjlist[i + column_offset + 1], i + column_offset)
+
+                    fadjlist1 = fadjlist[i + column_offset]
+                    fadjlist2 = fadjlist[i + column_offset + 1]
+                    node1 = i + column_offset + 1
+                    node2 = i + column_offset
+
+                    index1 = searchsortedfirst(fadjlist1, node1)
+                    insert!(fadjlist1, index1, node1)
+
+                    index2 = searchsortedfirst(fadjlist2, node2)
+                    insert!(fadjlist2, index2, node2)
+
+                    #push!(fadjlist[i + column_offset], i + column_offset + 1)
+                    #push!(fadjlist[i + column_offset + 1], i + column_offset)
                     push!(edges, edge)
                     edge_map[edge] = length(edges)
                 end
 
-                if !diagonal
+                if diagonal
                     # Add diagonal from top left to bottom right
                     if i != dim1 && j != dim2
                         edge = (i + column_offset, i + column_offset + dim1 + 1)
-                        push!(fadjlist[i + column_offset], i + column_offset + dim1 + 1)
-                        push!(fadjlist[i + column_offset + dim1 + 1], i + column_offset)
+
+                        fadjlist1 = fadjlist[i + column_offset]
+                        fadjlist2 = fadjlist[i + column_offset + dim1 + 1]
+                        node1 = i + column_offset + dim1 + 1
+                        node2 = i + column_offset
+
+                        index1 = searchsortedfirst(fadjlist1, node1)
+                        insert!(fadjlist1, index1, node1)
+
+                        index2 = searchsortedfirst(fadjlist2, node2)
+                        insert!(fadjlist2, index2, node2)
+
+                        #push!(fadjlist[i + column_offset], i + column_offset + dim1 + 1)
+                        #push!(fadjlist[i + column_offset + dim1 + 1], i + column_offset)
                         push!(edges, edge)
                         edge_map[edge] = length(edges)
                     end
                     # add diagonal from bottom left to top right
                     if i != 1 && j != dim2
                         edge = (i + column_offset, i + column_offset + dim1 - 1)
-                        push!(fadjlist[i + column_offset], i + column_offset + dim1 - 1)
-                        push!(fadjlist[i + column_offset + dim1 - 1], i + column_offset)
+
+                        fadjlist1 = fadjlist[i + column_offset]
+                        fadjlist2 = fadjlist[i + column_offset + dim1 - 1]
+                        node1 = i + column_offset + dim1 - 1
+                        node2 = i + column_offset
+
+                        index1 = searchsortedfirst(fadjlist1, node1)
+                        insert!(fadjlist1, index1, node1)
+
+                        index2 = searchsortedfirst(fadjlist2, node2)
+                        insert!(fadjlist2, index2, node2)
+
+                        #push!(fadjlist[i + column_offset], i + column_offset + dim1 - 1)
+                        #push!(fadjlist[i + column_offset + dim1 - 1], i + column_offset)
                         push!(edges, edge)
                         edge_map[edge] = length(edges)
                     end
@@ -547,6 +595,94 @@ function run_EC_on_edges(dg::DataGraph, thresh; attribute::String = dg.edge_data
 
     return ECs ./ scale_factor
 end
+
+"""
+    remove_node!(datagraph, node_name)
+
+Removes the node (and any node data) from `datagraph`
+"""
+function remove_node!(dg::DataGraph, node_name)
+    if !(node_name in dg.nodes)
+        error("$node_name is not defined in the DataGraph")
+    end
+
+    nodes    = dg.nodes
+    edges    = dg.edges
+    node_map = dg.node_map
+    edge_map = dg.edge_map
+    node_data = dg.node_data.data
+    edge_data = dg.edge_data.data
+    node_pos  = dg.node_positions
+
+    node_num  = node_map[node_name]
+    node_fadj = dg.g.fadjlist[node_num]
+
+    last_node_name  = nodes[length(nodes)]
+    old_node_length = length(nodes)
+    last_node_fadj  = dg.g.fadjlist[old_node_length]
+
+    if length(node_pos) == length(nodes)
+        last_node_pos = node_pos[old_node_length]
+        deleteat!(node_pos, node_num)
+        pop!(node_pos)
+        insert!(node_pos, node_num, last_node_pos)
+        dg.node_positions = node_pos
+    end
+
+    deleteat!(nodes, node_num)
+    delete!(node_map, node_name)
+    pop!(nodes)
+    insert!(nodes, node_num, last_node_name)
+
+    if length(dg.node_data.attributes) > 0
+        node_data_order = [i for i in 1:(length(nodes) - 1)]
+        insert!(node_data_order, node_num, length(nodes))
+
+        node_data = node_data[node_data_order, :]
+
+        dg.node_data.data = node_data
+    end
+
+    for i in 1:length(nodes)
+        node_map[nodes[i]] = i
+    end
+
+    edge_indices = [edge_map[_get_edge(node_num, j)] for j in node_fadj]
+    last_edges   = [(j, old_node_length) for j in last_node_fadj]
+    last_edge_indices = [edge_map[j] for j in last_edges]
+
+    for i in 1:length(node_fadj)
+        delete!(edge_map, _get_edge(node_num, node_fadj[i]))
+    end
+
+    for i in 1:length(last_edges)
+        delete!(edge_map, last_edges[i])
+
+        edges[last_edge_indices[i]] = _get_edge(last_edges[i][1], node_num)
+    end
+
+    sort!(edge_indices)
+    deleteat!(edges, edge_indices)
+
+    if length(dg.edge_data.attributes) > 0
+        edge_data = edge_data[setdiff(1:length(edges), edge_indices), :]
+
+        dg.edge_data.data = edge_data
+    end
+
+    for i in 1:length(edges)
+        edge_map[edges[i]] = i
+    end
+
+    Graphs.rem_vertex!(dg.g, node_num)
+
+    dg.nodes = nodes
+    dg.edges = edges
+    dg.node_map = node_map
+    dg.edge_map = edge_map
+    return true
+end
+
 
 """
     aggregate(datagraph, node_list, aggregated_node_name)

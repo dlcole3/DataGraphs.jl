@@ -177,6 +177,168 @@ function filter_edges(dg::DataDiGraph, filter_val::R; attribute::String = dg.edg
 end
 
 """
+    remove_node!(datadigraph, node_name)
+
+Removes the node (and any node data) from `datagraph`
+"""
+function remove_node!(dg::DataGraph, node_name)
+    if !(node_name in dg.nodes)
+        error("$node_name is not defined in the DataGraph")
+    end
+
+    nodes    = dg.nodes
+    edges    = dg.edges
+    node_map = dg.node_map
+    edge_map = dg.edge_map
+    node_data = dg.node_data.data
+    edge_data = dg.edge_data.data
+    node_pos  = dg.node_positions
+
+    node_num  = node_map[node_name]
+    node_fadj = dg.g.fadjlist[node_num]
+    node_badj = dg.g.badjlist[node_num]
+
+    last_node_name  = nodes[length(nodes)]
+    old_node_length = length(nodes)
+    last_node_fadj  = dg.g.fadjlist[old_node_length]
+    last_node_badj  = dg.g.badjlist[old_node_length]
+
+    if length(node_pos) == length(nodes)
+        last_node_pos = node_pos[old_node_length]
+        deleteat!(node_pos, node_num)
+        pop!(node_pos)
+        insert!(node_pos, node_num, last_node_pos)
+        dg.node_positions = node_pos
+    end
+
+    deleteat!(nodes, node_num)
+    delete!(node_map, node_name)
+    pop!(nodes)
+    insert!(nodes, node_num, last_node_name)
+
+    if length(dg.node_data.attributes) > 0
+        node_data_order = [i for i in 1:(length(nodes) - 1)]
+        insert!(node_data_order, node_num, length(nodes))
+
+        node_data = node_data[node_data_order, :]
+
+        dg.node_data.data = node_data
+    end
+
+    for i in 1:length(nodes)
+        node_map[nodes[i]] = i
+    end
+
+    out_edge_indices = [edge_map[(node_num, j)] for j in node_fadj]
+    in_edge_indices  = [edge_map[(j, node_num)] for j in node_badj]
+    edge_indices     = vcat(out_edge_indices, in_edge_indices)
+    out_last_edges   = [(old_node_length, j) for j in last_node_fadj]
+    in_last_edges    = [(j, old_node_length) for j in last_node_badj]
+    last_edges       = vcat(out_last_edges, in_last_edges)
+    last_edge_indices = [edge_map[j] for j in last_edges]
+
+
+    for i in 1:length(edge_indices)
+        delete!(edge_map, edges[edge_indices[i]])
+    end
+
+    for i in 1:length(last_edges)
+        delete!(edge_map, last_edges[i])
+        #edges[last_edge_indices[i]] = last_edges[i]
+    end
+
+    for i in 1:length(out_last_edges)
+        edges[last_edge_indices[i]] = (node_num, last_edges[i][2])
+    end
+
+    for i in 1:length(in_last_edges)
+        offset = length(out_last_edges)
+        edges[last_edge_indices[offset + i]] = (last_edges[offset + i][1], node_num)
+    end
+
+    sort!(edge_indices)
+    deleteat!(edges, edge_indices)
+
+    if length(dg.edge_data.attributes) > 0
+        edge_data = edge_data[setdiff(1:length(edges), edge_indices), :]
+
+        dg.edge_data.data = edge_data
+    end
+
+    for i in 1:length(edges)
+        edge_map[edges[i]] = i
+    end
+
+    Graphs.rem_vertex!(dg.g, node_num)
+
+    dg.nodes = nodes
+    dg.edges = edges
+    dg.node_map = node_map
+    dg.edge_map = edge_map
+    return true
+end
+
+"""
+    remove_edge!(datadigraph, node1, node2)
+    remove_edge!(datadigraph, (node1, node2))
+
+Remove the directed edge from node1 to node2 from the datadigraph.
+"""
+function remove_edge!(dg::DataDiGraph, node1::Any, node2::Any)
+    nodes = dg.nodes
+    edges = dg.edges
+    node_map = dg.node_map
+    edge_map = dg.edge_map
+
+    if !(node1 in nodes) || !(node2 in nodes)
+        error("$node1 or $node2 is not in the graph")
+    end
+
+    node_num1 = node_map[node1]
+    node_num2 = node_map[node2]
+
+    edge = (node1, node2)
+
+    if !(edge in edges)
+        error("Edge does not exist")
+    end
+
+    edge_num = edge_map[edge]
+
+    if length(dg.edge_data.attributes) > 0
+        edge_data = get_edge_data(dg)
+
+        edge_data = edge_data[1:length(edges) .!= edge_num, :]
+
+        dg.edge_data.data = edge_data
+    end
+
+    fadj_list1 = dg.g.fadjlist[node_num1]
+    index_node2 = searchsortedfirst(fadj_list1, node_num2)
+    deleteat!(fadj_list1, index_node2)
+
+    badj_list2 = dg.g.badjlist[node_num2]
+    index_node1 = searchsortedfirst(badj_list2, node_num1)
+    deleteat!(badj_list2, index_node1)
+
+    deleteat!(edges, edge_num)
+    delete!(edge_map, edge)
+
+    for i in 1:length(edges)
+        edge_map[edges[i]] = i
+    end
+
+    dg.edges = edges
+    dg.edge_map = edge_map
+
+    return true
+end
+
+remove_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
+    remove_edge!(dg, edge[1], edge[2])
+end
+
+"""
     aggregate(datadigraph, node_list, aggregated_node_name)
 
 Aggregates all the nodes in `node_list` into a single node which is called `aggregated_node_name`.

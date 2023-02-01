@@ -601,7 +601,7 @@ end
 
 Removes the node (and any node data) from `datagraph`
 """
-function remove_node!(dg::DataGraph, node_name)
+function remove_node!(dg::DataGraph, node_name::Any)
     if !(node_name in dg.nodes)
         error("$node_name is not defined in the DataGraph")
     end
@@ -683,6 +683,64 @@ function remove_node!(dg::DataGraph, node_name)
     return true
 end
 
+"""
+    remove_edge!(datagraph, node1, node2)
+    remove_edge!(datagraph, (node1, node2))
+
+Remove the edge between node1 and node1 from the datagraph.
+"""
+function remove_edge!(dg::DataGraph, node1::Any, node2::Any)
+    nodes = dg.nodes
+    edges = dg.edges
+    node_map = dg.node_map
+    edge_map = dg.edge_map
+
+    if !(node1 in nodes) || !(node2 in nodes)
+        error("$node1 or $node2 is not in the graph")
+    end
+
+    node_num1 = node_map[node1]
+    node_num2 = node_map[node2]
+    edge = _get_edge(node_num1, node_num2)
+
+    if !(edge in edges)
+        error("Edge does not exist")
+    end
+
+    edge_num = edge_map[edge]
+
+    if length(dg.edge_data.attributes) > 0
+        edge_data = get_edge_data(dg)
+
+        edge_data = edge_data[1:length(edges) .!= edge_num, :]
+
+        dg.edge_data.data = edge_data
+    end
+
+    fadj_list1 = dg.g.fadjlist[node_num1]
+    index_node2 = searchsortedfirst(fadj_list1, node_num2)
+    deleteat!(fadj_list1, index_node2)
+
+    fadj_list2 = dg.g.fadjlist[node_num2]
+    index_node1 = searchsortedfirst(fadj_list2, node_num1)
+    deleteat!(fadj_list2, index_node1)
+
+    deleteat!(edges, edge_num)
+    delete!(edge_map, edge)
+
+    for i in 1:length(edges)
+        edge_map[edges[i]] = i
+    end
+
+    dg.edges = edges
+    dg.edge_map = edge_map
+
+    return true
+end
+
+remove_edge!(dg::DataGraph, edge::Tuple{Any, Any})
+    remove_edge!(dg, edge[1], edge[2])
+end
 
 """
     aggregate(datagraph, node_list, aggregated_node_name)

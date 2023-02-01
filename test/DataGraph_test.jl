@@ -10,8 +10,7 @@ end
     @test length(dg.nodes) == length(nodes)
     @test dg.nodes == nodes
     @test length(dg.g.fadjlist) == length(nodes)
-    @test length(dg.node_map) == length(nodes)
-    @test test_map(dg.edges, dg.edge_map)
+    @test test_map(dg.nodes, dg.node_map)
 end
 
 # Test add_node_data!

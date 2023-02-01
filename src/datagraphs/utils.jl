@@ -430,7 +430,7 @@ function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_da
     if length(edge_attributes) > 0
         new_edge_data         = edge_data[old_edge_index, :]
         new_dg.edge_data.data = new_edge_data
-        new_dg.edge_data.attributes_map = dg.edge_data.attributes_map
+        new_dg.edge_data.attribute_map = dg.edge_data.attribute_map
     end
 
     simple_graph = Graphs.SimpleGraph(T(length(new_edges)), fadjlist)
@@ -662,14 +662,14 @@ function remove_node!(dg::DataGraph, node_name::Any)
         edges[last_edge_indices[i]] = _get_edge(last_edges[i][1], node_num)
     end
 
-    sort!(edge_indices)
-    deleteat!(edges, edge_indices)
-
     if length(dg.edge_data.attributes) > 0
         edge_data = edge_data[setdiff(1:length(edges), edge_indices), :]
 
         dg.edge_data.data = edge_data
     end
+
+    sort!(edge_indices)
+    deleteat!(edges, edge_indices)
 
     for i in 1:length(edges)
         edge_map[edges[i]] = i
@@ -702,6 +702,7 @@ function remove_edge!(dg::DataGraph, node1::Any, node2::Any)
 
     node_num1 = node_map[node1]
     node_num2 = node_map[node2]
+
     edge = _get_edge(node_num1, node_num2)
 
     if !(edge in edges)
@@ -941,8 +942,8 @@ function aggregate(dg::DataGraph, node_set, new_name)
         end
 
         new_dg.edge_data.attributes    = edge_attributes
-        new_dg.edge_data.attribute_map = edge_attirbute_map
-        new_g.edge_data.data           = new_edge_data
+        new_dg.edge_data.attribute_map = edge_attribute_map
+        new_dg.edge_data.data           = new_edge_data
     end
 
     simple_graph = Graphs.SimpleGraph(T(length(new_edges)), fadjlist)

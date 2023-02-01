@@ -176,7 +176,7 @@ Add a weight value for the given node name in the DataDiGraph object. User must 
 name" for the given weight. All other nodes that do not have a node_weight value defined for
 that attribute name default to a value of zero.
 """
-function add_node_data!(dg::DataDiGraph, node::Any, node_weight::Number, attribute::String)
+function add_node_data!(dg::DataDiGraph, node::Any, node_weight::Number, attribute::String = "weight")
     nodes         = dg.nodes
     attributes    = dg.node_data.attributes
     node_map      = dg.node_map
@@ -217,7 +217,7 @@ When using the second function, `edge` must be a tuple with two node names. User
 an "attribute name" for the given weight. All other edges that do not have an edge_weight
 value defined for that attribute name default to a value of zero.
 """
-function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T, attribute::String) where {T <: Real}
+function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T, attribute::String="weight") where {T <: Real}
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -255,6 +255,6 @@ function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T,
     end
 end
 
-function add_edge_data!(dg::DataDiGraph, edge::Tuple{Any, Any}, edge_weight::T, attribute::String) where {T <: Real}
+function add_edge_data!(dg::DataDiGraph, edge::Tuple{Any, Any}, edge_weight::T, attribute::String = "weight") where {T <: Real}
     add_edge_data!(dg, edge[1], edge[2], edge_weight, attribute)
 end

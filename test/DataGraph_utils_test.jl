@@ -123,6 +123,48 @@ ECs = run_EC_on_edges(dg, thresh)
 
 @test ECs == [3.0, 3.0, 3.0, 1.0]
 
+remove_edge!(dg, 2, 1)
 
-# add remove_edge! test
-# add aggregate test
+@testset "remove_edge! test1" begin
+    @test length(dg.nodes) == 3
+    @test length(dg.edges) == 2
+    @test test_map(dg.nodes, dg.node_map)
+    @test test_map(dg.edges, dg.edge_map)
+    @test length(get_edge_data(dg)) == length(dg.edges)
+    @test dg.edges[1] == (1, 3)
+    @test get_edge_data(dg)[2] == 4
+end
+
+dg = symmetric_matrix_to_graph(sym_matrix)
+
+remove_edge!(dg, (2,1))
+
+@testset "remove_edge! test2" begin
+    @test length(dg.nodes) == 3
+    @test length(dg.edges) == 2
+    @test test_map(dg.nodes, dg.node_map)
+    @test test_map(dg.edges, dg.edge_map)
+    @test length(get_edge_data(dg)) == length(dg.edges)
+    @test dg.edges[1] == (1, 3)
+    @test get_edge_data(dg)[2] == 4
+end
+
+dg = matrix_to_graph(matrix, false)
+
+agg_graph = aggregate(dg, [(2, 2), (2, 3)], "agg_node")
+
+@testset "aggregate test" begin
+    @test length(dg.nodes) - 1 == length(agg_graph.nodes)
+    @test length(dg.edges) - 1 == length(agg_graph.edges)
+    @test test_map(agg_graph.nodes, agg_graph.node_map)
+    @test test_map(agg_graph.edges, agg_graph.edge_map)
+    @test dg.g.ne == length(dg.edges)
+    node_2_2_val = get_node_data(dg, (2, 2))
+    node_2_3_val = get_node_data(dg, (2, 3))
+    @test get_node_data(agg_graph, "agg_node") == (node_2_2_val + node_2_3_val) / 2
+    @test test_edge_exists(agg_graph, (1, 2), "agg_node")
+    @test test_edge_exists(agg_graph, (1, 3), "agg_node")
+    @test test_edge_exists(agg_graph, (2, 1), "agg_node")
+    @test test_edge_exists(agg_graph, (3, 2), "agg_node")
+    @test test_edge_exists(agg_graph, (3, 3), "agg_node")
+end

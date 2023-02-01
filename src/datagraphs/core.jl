@@ -4,14 +4,14 @@
         data = Array{Float64}(undef, (0, 0))
     )
 
-Constructor for building NodeData{T, M}
+Constructor for building NodeData{T, T1, M1}
 """
 function NodeData(
     attributes::Vector{String} = Vector{String}(),
-    attribute_map::Dict{String, Int} = Dict{String, Int}(),
-    data::M = Array{Float64}(undef, (0, 0))
-) where {T, M <: Matrix{T}}
-    NodeData{T, M}(
+    attribute_map::Dict{String, T} = Dict{String, Int}(),
+    data::M1 = Array{Float64}(undef, (0, 0))
+) where {T <: Real, T1, M1 <: AbstractMatrix{T1}}
+    NodeData{T, T1, M1}(
         attributes,
         attribute_map,
         data
@@ -24,14 +24,14 @@ end
         data = Array{Float64}(undef, (0, 0))
     )
 
-Constructor for building EdgeData{T, M}
+Constructor for building EdgeData{T, T2, M2}
 """
 function EdgeData(
     attributes::Vector{String} = Vector{String}(),
-    attribute_map::Dict{String, Int} = Dict{String, Int}(),
-    data::M = NamedArray{Float64}(undef, (0, 0))
-) where {T, M <: Matrix{T}}
-    EdgeData{T, M}(
+    attribute_map::Dict{String, T} = Dict{String, Int}(),
+    data::M2 = NamedArray{Float64}(undef, (0, 0))
+) where {T <: Real, T2, M2 <: AbstractMatrix{T2}}
+    EdgeData{T, T2, M2}(
         attributes,
         attribute_map,
         data

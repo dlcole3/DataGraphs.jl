@@ -237,7 +237,7 @@ function symmetric_matrix_to_graph(matrix::M; attribute::String="weight", tol::R
 
     for j in 1:dim2
         for i in (j + 1):dim1
-            DataGraphs.add_edge!(dg, i, j)
+            DataGraphs.add_edge!(dg, j, i)
             add_edge_data!(dg, i, j, matrix[i,j], attribute)
         end
     end
@@ -373,11 +373,11 @@ function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_da
     T1 = eltype(get_node_data(dg))
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
-    M2 = eltype(get_edge_data(dg))
+    M2 = typeof(get_edge_data(dg))
 
     new_dg = DataGraph{T, T1, T2, M1, M2}()
 
-    am = Graphs.LinAlg.adjacency_matrix(dg)
+    am = Graphs.LinAlg.adjacency_matrix(dg.g)
 
     bool_vec = node_data[:, node_attribute_map[attribute]] .< filter_val
 
@@ -475,7 +475,7 @@ function filter_edges(dg::DataGraph, filter_val::R; attribute::String = dg.edge_
     T1 = eltype(get_node_data(dg))
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
-    M2 = eltype(get_edge_data(dg))
+    M2 = typeof(get_edge_data(dg))
 
     new_dg = DataGraph{T, T1, T2, M1, M2}()
 
@@ -629,19 +629,20 @@ function remove_node!(dg::DataGraph, node_name::Any)
         dg.node_positions = node_pos
     end
 
-    deleteat!(nodes, node_num)
-    delete!(node_map, node_name)
-    pop!(nodes)
-    insert!(nodes, node_num, last_node_name)
-
     if length(dg.node_data.attributes) > 0
         node_data_order = [i for i in 1:(length(nodes) - 1)]
+        deleteat!(node_data_order, node_num)
         insert!(node_data_order, node_num, length(nodes))
 
         node_data = node_data[node_data_order, :]
 
         dg.node_data.data = node_data
     end
+
+    deleteat!(nodes, node_num)
+    delete!(node_map, node_name)
+    pop!(nodes)
+    insert!(nodes, node_num, last_node_name)
 
     for i in 1:length(nodes)
         node_map[nodes[i]] = i
@@ -685,9 +686,9 @@ end
 
 """
     remove_edge!(datagraph, node1, node2)
-    remove_edge!(datagraph, (node1, node2))
+    remove_edge!(datagraph, edge_tuple)
 
-Remove the edge between node1 and node1 from the datagraph.
+Remove the edge between node1 and node2 from the datagraph.
 """
 function remove_edge!(dg::DataGraph, node1::Any, node2::Any)
     nodes = dg.nodes
@@ -738,7 +739,7 @@ function remove_edge!(dg::DataGraph, node1::Any, node2::Any)
     return true
 end
 
-remove_edge!(dg::DataGraph, edge::Tuple{Any, Any})
+function remove_edge!(dg::DataGraph, edge::Tuple{Any, Any})
     remove_edge!(dg, edge[1], edge[2])
 end
 
@@ -775,7 +776,7 @@ function aggregate(dg::DataGraph, node_set, new_name)
     T1 = eltype(get_node_data(dg))
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
-    M2 = eltype(get_edge_data(dg))
+    M2 = typeof(get_edge_data(dg))
 
     new_dg = DataGraph{T, T1, T2, M1, M2}()
 

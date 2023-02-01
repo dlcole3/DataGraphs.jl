@@ -26,7 +26,7 @@ function filter_nodes(dg::DataDiGraph, filter_val::R; attribute::String=dg.node_
     T1 = eltype(get_node_data(dg))
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
-    M2 = eltype(get_edge_data(dg))
+    M2 = typeof(get_edge_data(dg))
 
     new_dg = DataDiGraph{T, T1, T2, M1, M2}()
 
@@ -129,7 +129,7 @@ function filter_edges(dg::DataDiGraph, filter_val::R; attribute::String = dg.edg
     T1 = eltype(get_node_data(dg))
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
-    M2 = eltype(get_edge_data(dg))
+    M2 = typeof(get_edge_data(dg))
 
     bool_vec = dg.edge_data.data[:, edge_attribute_map[attribute]] .< filter_val
 
@@ -179,9 +179,9 @@ end
 """
     remove_node!(datadigraph, node_name)
 
-Removes the node (and any node data) from `datagraph`
+Removes the node (and any node data) from `datadigraph`
 """
-function remove_node!(dg::DataGraph, node_name)
+function remove_node!(dg::DataDiGraph, node_name)
     if !(node_name in dg.nodes)
         error("$node_name is not defined in the DataGraph")
     end
@@ -211,19 +211,20 @@ function remove_node!(dg::DataGraph, node_name)
         dg.node_positions = node_pos
     end
 
-    deleteat!(nodes, node_num)
-    delete!(node_map, node_name)
-    pop!(nodes)
-    insert!(nodes, node_num, last_node_name)
-
     if length(dg.node_data.attributes) > 0
         node_data_order = [i for i in 1:(length(nodes) - 1)]
+        deleteat!(node_data_order, node_num)
         insert!(node_data_order, node_num, length(nodes))
 
         node_data = node_data[node_data_order, :]
 
         dg.node_data.data = node_data
     end
+
+    deleteat!(nodes, node_num)
+    delete!(node_map, node_name)
+    pop!(nodes)
+    insert!(nodes, node_num, last_node_name)
 
     for i in 1:length(nodes)
         node_map[nodes[i]] = i
@@ -280,7 +281,7 @@ end
 
 """
     remove_edge!(datadigraph, node1, node2)
-    remove_edge!(datadigraph, (node1, node2))
+    remove_edge!(datadigraph, edge_tuple)
 
 Remove the directed edge from node1 to node2 from the datadigraph.
 """
@@ -334,7 +335,7 @@ function remove_edge!(dg::DataDiGraph, node1::Any, node2::Any)
     return true
 end
 
-remove_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
+function remove_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
     remove_edge!(dg, edge[1], edge[2])
 end
 
@@ -371,7 +372,7 @@ function aggregate(dg::DataDiGraph, node_set, new_name)
     T1 = eltype(get_node_data(dg))
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
-    M2 = eltype(get_edge_data(dg))
+    M2 = typeof(get_edge_data(dg))
 
     new_dg = DataDiGraph{T, T1, T2, M1, M2}()
 

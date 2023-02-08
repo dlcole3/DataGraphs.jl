@@ -383,6 +383,10 @@ function adjacency_matrix(dg::D) where {D <: DataGraphUnion}
 end
 
 function add_node_attribute!(dg::D, attribute::String, default_weight = 0) where {D <: DataGraphUnion}
+    if attribute in dg.node_data.attributes
+        error("attribute $attribute already exists")
+    end
+
     node_data = get_node_data(dg)
     nodes = dg.nodes
 
@@ -398,6 +402,10 @@ function add_node_attribute!(dg::D, attribute::String, default_weight = 0) where
 end
 
 function add_edge_attribute!(dg::D, attribute::String, default_weight = 0) where {D <: DataGraphUnion}
+    if attribute in dg.edge_data.attributes
+        error("attribute $attribute already exists")
+    end
+
     edge_data = get_edge_data(dg)
     edges = dg.edges
 

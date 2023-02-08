@@ -36,6 +36,7 @@ add_node_attribute!(dg, "weight2", 1.0)
     @test dg.node_data.attributes == ["weight", "weight2"]
     @test dg.node_data.attribute_map["weight2"] == 2
     @test all(i -> i == 1.0, get_node_data(dg)[:, 2])
+    @test_throws ErrorException add_node_attribute!(dg, "weight", 0.0)
 end
 
 # Test add_edge! function 1
@@ -125,6 +126,7 @@ add_edge_attribute!(dg, "weight2", 1.0)
     @test dg.edge_data.attributes == ["weight", "weight2"]
     @test dg.edge_data.attribute_map["weight2"] == 2
     @test all(i -> i == 1.0, get_edge_data(dg)[:, 2])
+    @test_throws ErrorException add_edge_attribute!(dg, "weight", 0.0)
 end
 
 

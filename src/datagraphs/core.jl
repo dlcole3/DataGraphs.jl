@@ -381,3 +381,33 @@ function adjacency_matrix(dg::D) where {D <: DataGraphUnion}
     am = Graphs.LinAlg.adjacency_matrix(dg.g)
     return am
 end
+
+function add_node_attribute!(dg::D, attribute::String, default_weight = 0) where {D <: DataGraphUnion}
+    node_data = get_node_data(dg)
+    nodes = dg.nodes
+
+    new_col = fill(default_weight, (length(nodes,), 1))
+
+    node_data = hcat(node_data, new_col)
+    push!(dg.node_data.attributes, attribute)
+    dg.node_data.attribute_map[attribute] = length(dg.node_data.attributes)
+
+    dg.node_data.data = node_data
+
+    return true
+end
+
+function add_edge_attribute!(dg::D, attribute::String, default_weight = 0) where {D <: DataGraphUnion}
+    edge_data = get_edge_data(dg)
+    edges = dg.edges
+
+    new_col = fill(default_weight, (length(edges), 1))
+
+    edge_data = hcat(edge_data, new_col)
+    push!(dg.edge_data.attributes, attribute)
+    dg.edge_data.attribute_map[attribute] = length(dg.edge_data.attributes)
+
+    dg.edge_data.data = edge_data
+
+    return true
+end

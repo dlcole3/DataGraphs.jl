@@ -11,6 +11,7 @@ export get_EC, matrix_to_graph, symmetric_matrix_to_graph, mvts_to_graph, tensor
 export filter_nodes, filter_edges, run_EC_on_nodes, run_EC_on_edges, aggregate, average_degree
 export get_node_data, get_edge_data, ne, nn, nv, remove_node!, remove_edge!
 export add_node_attribute!, add_edge_attribute!, has_edge, has_node
+export get_node_attributes, get_edge_attributes
 
 abstract type AbstractDataGraph{T} <: Graphs.AbstractGraph{T} end
 

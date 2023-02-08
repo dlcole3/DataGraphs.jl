@@ -382,7 +382,14 @@ function adjacency_matrix(dg::D) where {D <: DataGraphUnion}
     return am
 end
 
-function add_node_attribute!(dg::D, attribute::String, default_weight = 0) where {D <: DataGraphUnion}
+"""
+    add_node_attribute!(datagraph, attribute, default_weight = 0.0)
+    add_node_attribute!(datadigraph, attribute, default_weight = 0.0)
+
+Add a column filled with `default_weight` to the `node_data` matrix with the name `attribute`.
+If `attribute` already exists in the node data, an error is thrown.
+"""
+function add_node_attribute!(dg::D, attribute::String, default_weight = 0.0) where {D <: DataGraphUnion}
     if attribute in dg.node_data.attributes
         error("attribute $attribute already exists")
     end
@@ -401,6 +408,13 @@ function add_node_attribute!(dg::D, attribute::String, default_weight = 0) where
     return true
 end
 
+"""
+    add_edge_attribute!(datagraph, attribute, default_weight = 0.0)
+    add_edge_attribute!(datadigraph, attribute, default_weight = 0.0)
+
+Add a column filled with `default_weight` to the `edge_data` matrix with the name `attribute`.
+If `attribute` already exists in the edge data, an error is thrown.
+"""
 function add_edge_attribute!(dg::D, attribute::String, default_weight = 0) where {D <: DataGraphUnion}
     if attribute in dg.edge_data.attributes
         error("attribute $attribute already exists")

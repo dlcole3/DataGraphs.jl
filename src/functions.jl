@@ -132,7 +132,7 @@ end
 
 Returns true if a path exists in the `datagraph` between `src_node` to `dst_node`. Else returns false
 """
-function Graphs.has_path(dg::D, src_node, dst_node) where {D <: DataGraphUnion}
+function has_path(dg::D, src_node::Any, dst_node::Any) where {D <: DataGraphUnion}
     node_map = dg.node_map
     nodes    = dg.nodes
 
@@ -152,7 +152,7 @@ end
 Returns true if a path exists in the `datagraph` between `src_node` and `dst_node` which
 passes through the `intermediate node`. Else returns false
 """
-function Graphs.has_path(dg::D, src_node, intermediate_node, dst_node) where {D <: DataGraphUnion}
+function has_path(dg::D, src_node, intermediate_node, dst_node) where {D <: DataGraphUnion}
     node_map = dg.node_map
     nodes    = dg.nodes
 
@@ -164,12 +164,11 @@ function Graphs.has_path(dg::D, src_node, intermediate_node, dst_node) where {D 
     int_index = node_map[intermediate_node]
     dst_index = node_map[dst_node]
 
-    if Graphs.has_path(dg.g., src_index, int_index) && Graphs.has_path(dg.g, int_index, dst_node)
+    if Graphs.has_path(dg.g, src_index, int_index) && Graphs.has_path(dg.g, int_index, dst_index)
         return true
     else
         return false
     end
-
 end
 
 """
@@ -178,8 +177,7 @@ end
 Returns the shortest path in the `datagraph` between `src_node` and `dst_node`.
 Shortest path is computed by Dijkstra's algorithm
 
-`algorithm` is a string key word. Options are limited to "Dijkstra",
-"BellmanFord", "DEsopoPape", "FloydWarshall", and "Johnson"
+`algorithm` is a string key word. Options are limited to "Dijkstra", "BellmanFord"
 """
 function get_path(dg::D, src_node, dst_node; algorithm = "Dijkstra") where {D <: DataGraphUnion}
     node_map = dg.node_map
@@ -196,12 +194,6 @@ function get_path(dg::D, src_node, dst_node; algorithm = "Dijkstra") where {D <:
         path_state = Graphs.dijkstra_shortest_paths(dg.g, [src_index])
     elseif algorithm == "BellmanFord"
         path_state = Graphs.bellman_ford_shortest_paths(dg.g, [src_index])
-    elseif algorithm == "DEsopoPape"
-        path_state = Graphs.desopo_pape_shortest_paths(dg.g, [src_index])
-    elseif algorithm == "FloydWarshall"
-        path_state = Graphs.floyd_warshall_shortest_paths(dg.g, [src_index])
-    elseif algorithm == "Johnson"
-        path_state = Graphs.johnson_shortest_paths(dg.g, [src_index])
     else
         error("$algorithm is not a supported algorithm option")
     end
@@ -223,15 +215,21 @@ function get_path(dg::D, src_node, dst_node; algorithm = "Dijkstra") where {D <:
 end
 
 """
-    get_path(datagraph, src_node, intermediate_node, dst_node; algorithm = "Dijkstra")
+    get_path_with_intermediate(datagraph, src_node, intermediate_node, dst_node; algorithm = "Dijkstra")
 
 Returns the shortest path in the `datagraph` between `src_node` and `dst_node`
 which passes through `intermediate node`.
 
-`algorithm` is a string key word. Options are limited to "Dijkstra",
-"BellmanFord", "DEsopoPape", "FloydWarshall", and "Johnson"
+`algorithm` is a string key word. Options are limited to "Dijkstra", "BellmanFord"
 """
-function get_path_with_intemediate(dg::D, src_node, intermediate_node, dst_node; algorithm = "Dijkstra") where {D <: DataGraphUnion}
+function get_path_with_intermediate(
+    dg::D,
+    src_node::Any,
+    intermediate_node::Any,
+    dst_node::Any;
+    algorithm = "Dijkstra"
+) where {D <: DataGraphUnion}
+
     node_map = dg.node_map
     nodes    = dg.nodes
 
@@ -241,7 +239,7 @@ function get_path_with_intemediate(dg::D, src_node, intermediate_node, dst_node;
 
     src_index = node_map[src_node]
     int_index = node_map[intermediate_node]
-    dst_index = node_map[src_node]
+    dst_index = node_map[dst_node]
 
     if algorithm == "Dijkstra"
         path_state_src = Graphs.dijkstra_shortest_paths(dg.g, [src_index])
@@ -249,24 +247,11 @@ function get_path_with_intemediate(dg::D, src_node, intermediate_node, dst_node;
     elseif algorithm == "BellmanFord"
         path_state_src = Graphs.bellman_ford_shortest_paths(dg.g, [src_index])
         path_state_int = Graphs.bellman_ford_shortest_paths(dg.g, [int_index])
-    elseif algorithm == "DEsopoPape"
-        path_state_src = Graphs.desopo_pape_shortest_paths(dg.g, [src_index])
-        path_state_int = Graphs.desopo_pape_shortest_paths(dg.g, [int_index])
-    elseif algorithm == "FloydWarshall"
-        path_state_src = Graphs.floyd_warshall_shortest_paths(dg.g, [src_index])
-        path_state_int = Graphs.floyd_warshall_shortest_paths(dg.g, [int_index])
-    elseif algorithm == "Johnson"
-        path_state_src = Graphs.johnson_shortest_paths(dg.g, [src_index])
-        path_state_int = Graphs.johnson_shortest_paths(dg.g, [int_index])
     else
         error("$algorithm is not a supported algorithm option")
     end
 
-    path_state_src = Graphs.dijkstra_shortest_paths(dg.g, [src_index])
-
     index_path_to_int = Graphs.enumerate_paths(path_state_src, int_index)
-
-    path_state_int = Graphs.sijkstra_shortest_paths(dg.g, [int_index])
 
     index_path_to_dst = Graphs.enumerate_paths(path_state_int, dst_index)
 
@@ -282,10 +267,10 @@ function get_path_with_intemediate(dg::D, src_node, intermediate_node, dst_node;
     path_to_dst_len = length(index_path_to_dst)
 
     for i in 1:path_to_int_len
-        path[i] = nodes[index_path[i]]
+        path[i] = nodes[index_path_to_int[i]]
     end
 
-    for i in 2:path_to_int_dst
+    for i in 2:path_to_dst_len
         path[i + path_to_int_len - 1] = nodes[index_path_to_dst[i]]
     end
 

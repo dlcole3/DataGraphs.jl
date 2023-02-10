@@ -168,3 +168,18 @@ agg_graph = aggregate(dg, [(2, 2), (2, 3)], "agg_node")
     @test test_edge_exists(agg_graph, (3, 2), "agg_node")
     @test test_edge_exists(agg_graph, (3, 3), "agg_node")
 end
+
+dg = matrix_to_graph(matrix, true)
+
+@testset "pathway functions" begin
+    @test DataGraphs.has_path(dg, (1, 1), (3, 3))
+    @test DataGraphs.has_path(dg, (1, 1), (2, 1), (3, 3))
+    @test get_path(dg, (1, 1), (3, 3)) == [(1, 1), (2, 2), (3, 3)]
+    @test get_path_with_intermediate(dg, (1, 1), (2, 1), (3, 3)) == [(1, 1), (2, 1), (3, 2), (3, 3)]
+    @test get_path(dg, (1, 1), (3, 3); algorithm = "BellmanFord") == [(1, 1), (2, 2), (3, 3)]
+    @test get_path_with_intermediate(dg, (1, 1), (2, 1), (3, 3); algorithm = "BellmanFord") == [(1, 1), (2, 1), (2, 2), (3, 3)]
+    @test_throws ErrorException DataGraphs.has_path(dg, (1, 1), (3, 4))
+    @test_throws ErrorException DataGraphs.has_path(dg, (1, 1), (3, 3), (3, 4))
+    @test_throws ErrorException get_path(dg, (1, 4), (3, 3))
+    @test_throws ErrorException get_path_with_intermediate(dg, (1, 1), (2, 4), (3, 3))
+end

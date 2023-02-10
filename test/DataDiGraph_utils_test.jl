@@ -1,6 +1,6 @@
 nodes = [1, 2, 3, 4, 5, 6]
 node_data = [1, 2, 4, 1, 2, 1]
-edges = [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (4, 5), (4,6)]
+edges = [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (4, 5), (4, 6)]
 edge_data = [1, 1, 2, 3, 4, 2, 4]
 
 dg = DataDiGraph()
@@ -50,6 +50,19 @@ agg_graph = aggregate(dg, [1, 5], "new_node")
     @test get_edge_data(agg_graph)[:] == [1.0, 1.0, 3.0, 4.0, 2.0, 4.0]
     @test_throws ErrorException aggregate(dg, [1,7], "new_node")
     @test_throws ErrorException aggregate(dg, [1,5], 6)
+end
+
+@testset "pathway functions" begin
+    @test DataGraphs.has_path(dg, 1, 6)
+    @test DataGraphs.has_path(dg, 1, 4, 6)
+    @test get_path(dg, 1, 6) == [1, 4, 6]
+    @test get_path_with_intermediate(dg, 1, 4, 6) == [1, 4, 6]
+    @test get_path(dg, 1, 6; algorithm = "BellmanFord") == [1, 4, 6]
+    @test get_path_with_intermediate(dg, 1, 4, 6; algorithm = "BellmanFord") == [1, 4, 6]
+    @test_throws ErrorException DataGraphs.has_path(dg, 1, 7)
+    @test_throws ErrorException DataGraphs.has_path(dg, 1, 7, 4)
+    @test_throws ErrorException get_path(dg, 7, 3)
+    @test_throws ErrorException get_path_with_intermediate(dg, 1, 3, 7)
 end
 
 remove_node!(dg, 2)

@@ -215,14 +215,14 @@ function get_path(dg::D, src_node, dst_node; algorithm = "Dijkstra") where {D <:
 end
 
 """
-    get_path_with_intermediate(datagraph, src_node, intermediate_node, dst_node; algorithm = "Dijkstra")
+    get_path(datagraph, src_node, intermediate_node, dst_node; algorithm = "Dijkstra")
 
 Returns the shortest path in the `datagraph` between `src_node` and `dst_node`
 which passes through `intermediate node`.
 
 `algorithm` is a string key word. Options are limited to "Dijkstra", "BellmanFord"
 """
-function get_path_with_intermediate(
+function get_path(
     dg::D,
     src_node::Any,
     intermediate_node::Any,
@@ -275,4 +275,48 @@ function get_path_with_intermediate(
     end
 
     return path
+end
+
+"""
+    nodes_to_index(datagraph, node_list)
+
+From a list of nodes in the `datagraph`, return a list of their corresponding integer indices
+"""
+function nodes_to_index(dg::D, node_list::Vector) where {D <: DataGraphUnion}
+    nodes = dg.nodes
+    node_map = dg.node_map
+
+    if !(all(x -> x in nodes, node_list))
+        error("Node(s) in node_list are not in DataGraph")
+    end
+
+    T = eltype(dg)
+
+    index_list = Vector{T}(undef, length(node_list))
+    for i in 1:length(index_list)
+        index_list[i] = node_map[node_list[i]]
+    end
+
+    return index_list
+end
+
+"""
+    index_to_nodes(datagraph, index_list)
+
+From a list of integer indeices, return a list of corresponding nodes in the `datagraph`
+"""
+function index_to_nodes(dg::D, index_list::Vector) where {D <: DataGraphUnion}
+    nodes = dg.nodes
+    node_map = dg.node_map
+
+    if !(all(x -> x <= length(nodes), index_list))
+        error("Value(s) in index_list are larger than the number of nodes in DataGraph")
+    end
+
+    node_list = Vector{Any}(undef, length(index_list))
+    for i in 1:length(node_list)
+        node_list[i] = nodes[index_list[i]]
+    end
+
+    return node_list
 end

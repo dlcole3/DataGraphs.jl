@@ -8,10 +8,11 @@ using LinearAlgebra
 
 export DataGraph, DataDiGraph, add_node!, add_node_data!, add_edge_data!, adjacency_matrix
 export get_EC, matrix_to_graph, symmetric_matrix_to_graph, mvts_to_graph, tensor_to_graph
-export filter_nodes, filter_edges, run_EC_on_nodes, run_EC_on_edges, aggregate, average_degree
+export filter_nodes, filter_edges, run_EC_on_nodes, run_EC_on_edges, aggregate
 export get_node_data, get_edge_data, ne, nn, nv, remove_node!, remove_edge!
-export add_node_attribute!, add_edge_attribute!, has_edge, has_node
-export get_node_attributes, get_edge_attributes, get_path, get_path_with_intermediate
+export add_node_attribute!, add_edge_attribute!, has_edge, has_node, has_path
+export get_node_attributes, get_edge_attributes, get_path
+export nodes_to_index, index_to_nodes, average_degree
 
 abstract type AbstractDataGraph{T} <: Graphs.AbstractGraph{T} end
 
@@ -119,7 +120,7 @@ end
 Data type that is a union of DataGraph and DataDiGraph; used for functions that apply to
 both data types
 """
-DataGraphUnion = Union{DataGraph, DataDiGraph}
+DataGraphUnion = Union{DataGraph{T}, DataDiGraph{T}} where T
 
 include("datagraphs/core.jl")
 include("datadigraphs/core.jl")

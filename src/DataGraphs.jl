@@ -57,6 +57,46 @@ mutable struct EdgeData{T, T2, M2}
 end
 
 """
+    NodeData(attributes = Vector{String}(),
+        attribute_map = Dict{String, Int}(),
+        data = Array{Float64}(undef, (0, 0))
+    )
+
+Constructor for building NodeData{T, T1, M1}
+"""
+function NodeData(
+    attributes::Vector{String} = Vector{String}(),
+    attribute_map::Dict{String, T} = Dict{String, Int}(),
+    data::M1 = Array{Float64}(undef, (0, 0))
+) where {T <: Real, T1, M1 <: AbstractMatrix{T1}}
+    NodeData{T, T1, M1}(
+        attributes,
+        attribute_map,
+        data
+    )
+end
+
+"""
+    EdgeData(attributes = Vector{String}(),
+        attribute_map = Dict{String, Int}(),
+        data = Array{Float64}(undef, (0, 0))
+    )
+
+Constructor for building EdgeData{T, T2, M2}
+"""
+function EdgeData(
+    attributes::Vector{String} = Vector{String}(),
+    attribute_map::Dict{String, T} = Dict{String, Int}(),
+    data::M2 = NamedArray{Float64}(undef, (0, 0))
+) where {T <: Real, T2, M2 <: AbstractMatrix{T2}}
+    EdgeData{T, T2, M2}(
+        attributes,
+        attribute_map,
+        data
+    )
+end
+
+"""
     DataGraph{T, T1, T2, M1, M2}
 
 Object for building and storing undirected graphs that contain numerical data on nodes and/or edges.
@@ -122,6 +162,10 @@ both data types
 """
 DataGraphUnion = Union{DataGraph{T}, DataDiGraph{T}} where T
 
+function Base.eltype(datagraph::D) where {D <: DataGraphUnion}
+    return eltype(eltype(datagraph.g.fadjlist))
+end
+
 include("datagraphs/core.jl")
 include("datadigraphs/core.jl")
 include("datadigraphs/utils.jl")
@@ -129,5 +173,6 @@ include("datadigraphs/interface.jl")
 include("datagraphs/interface.jl")
 include("datagraphs/utils.jl")
 include("functions.jl")
+include("interface.jl")
 
 end

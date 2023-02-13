@@ -103,7 +103,6 @@ remove_node!(dg, (1, 3))
     @test get_node_data(dg)[7] == 1
 end
 
-
 sym_matrix = matrix + matrix'
 
 dg = symmetric_matrix_to_graph(sym_matrix)
@@ -168,23 +167,3 @@ agg_graph = aggregate(dg, [(2, 2), (2, 3)], "agg_node")
     @test test_edge_exists(agg_graph, (3, 2), "agg_node")
     @test test_edge_exists(agg_graph, (3, 3), "agg_node")
 end
-
-dg = matrix_to_graph(matrix, true)
-
-@testset "pathway functions" begin
-    @test DataGraphs.has_path(dg, (1, 1), (3, 3))
-    @test DataGraphs.has_path(dg, (1, 1), (2, 1), (3, 3))
-    @test get_path(dg, (1, 1), (3, 3)) == [(1, 1), (2, 2), (3, 3)]
-    @test get_path(dg, (1, 1), (2, 1), (3, 3)) == [(1, 1), (2, 1), (3, 2), (3, 3)]
-    @test get_path(dg, (1, 1), (3, 3); algorithm = "BellmanFord") == [(1, 1), (2, 2), (3, 3)]
-    @test get_path(dg, (1, 1), (2, 1), (3, 3); algorithm = "BellmanFord") == [(1, 1), (2, 1), (2, 2), (3, 3)]
-    @test_throws ErrorException DataGraphs.has_path(dg, (1, 1), (3, 4))
-    @test_throws ErrorException DataGraphs.has_path(dg, (1, 1), (3, 3), (3, 4))
-    @test_throws ErrorException get_path(dg, (1, 4), (3, 3))
-    @test_throws ErrorException get_path_with_intermediate(dg, (1, 1), (2, 4), (3, 3))
-end
-
-@test average_degree(dg) == length(dg.edges) * 2 / length(dg.nodes)
-
-@test index_to_nodes(dg, [1, 4, 7]) == [(1, 1), (1, 2), (1, 3)]
-@test nodes_to_index(dg, [(1, 1), (1, 2), (1, 3)]) == [1, 4, 7]

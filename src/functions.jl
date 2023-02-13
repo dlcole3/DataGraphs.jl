@@ -15,14 +15,32 @@ function Graphs.is_connected(dg::D) where {D <: DataGraphUnion}
     return Graphs.is_connected(dg.g)
 end
 
-function Graphs.common_neighbors(dg::D, node1, node2) where {D <: DataGraphUnion}
+function Graphs.common_neighbors(dg::D, node1::Any, node2::Any) where {D <: DataGraphUnion}
     node_map = dg.node_map
-    return Graphs.common_neighbors(dg.g, node_map[node1], node_map[node2])
+    cn = Graphs.common_neighbors(dg.g, node_map[node1], node_map[node2])
+
+    return index_to_nodes(dg, cn)
 end
 
-function Graphs.neighbors(dg::D, node) where {D <: DataGraphUnion}
+function Graphs.common_neighbors(dg::D, node1::Int, node2::Int) where {D <: DataGraphUnion}
     node_map = dg.node_map
-    return Graphs.neighbors(dg.g, node_map[node])
+    cn = Graphs.common_neighbors(dg.g, node_map[node1], node_map[node2])
+
+    return index_to_nodes(dg, cn)
+end
+
+function Graphs.neighbors(dg::D, node::Any) where {D <: DataGraphUnion}
+    node_map = dg.node_map
+    neighbor_list = Graphs.neighbors(dg.g, node_map[node])
+
+    return index_to_nodes(dg, neighbor_list)
+end
+
+function Graphs.neighbors(dg::D, node::Int) where {D <: DataGraphUnion}
+    node_map = dg.node_map
+    neighbor_list = Graphs.neighbors(dg.g, node_map[node])
+
+    return index_to_nodes(dg, neighbor_list)
 end
 
 function Graphs.core_number(dg::D) where {D <: DataGraphUnion}
@@ -44,7 +62,12 @@ function Graphs.k_crust(dg::D, k = -1) where {D <: DataGraphUnion}
     return dg.nodes[k_crust_index]
 end
 
-function Graphs.eccentricity(dg::D, node) where {D <: DataGraphUnion}
+function Graphs.eccentricity(dg::D, node::Any) where {D <: DataGraphUnion}
+    node_map = dg.node_map
+    return Graphs.eccentricity(dg.g, node_map[node])
+end
+
+function Graphs.eccentricity(dg::D, node::Int) where {D <: DataGraphUnion}
     node_map = dg.node_map
     return Graphs.eccentricity(dg.g, node_map[node])
 end
@@ -62,12 +85,9 @@ function Graphs.radius(dg::D) where {D <: DataGraphUnion}
 end
 
 function Graphs.center(dg::D) where {D <: DataGraphUnion}
-    return Graphs.center(dg.g)
+    return index_to_nodes(dg, Graphs.center(dg.g))
 end
 
-function Graphs.complement(dg::D) where {D <: DataGraphUnion}
-    return Graphs.complement(dg.g)
-end
 
 function Graphs.cycle_basis(dg::D) where {D <: DataGraphUnion}
     numbered_cycles = Graphs.cycle_basis(dg.g)
@@ -86,27 +106,42 @@ function Graphs.indegree(dg::D) where {D <: DataGraphUnion}
     return Graphs.indegree(dg.g)
 end
 
-function Graphs.indegree(dg::D, node) where {D <: DataGraphUnion}
+function Graphs.indegree(dg::D, node::Any) where {D <: DataGraphUnion}
     node_map = dg.node_map
-    return Graphs.indegree(dg, node_map[node])
+    return Graphs.indegree(dg.g, node_map[node])
+end
+
+function Graphs.indegree(dg::D, node::Int) where {D <: DataGraphUnion}
+    node_map = dg.node_map
+    return Graphs.indegree(dg.g, node_map[node])
 end
 
 function Graphs.outdegree(dg::D) where {D <: DataGraphUnion}
     return Graphs.outdegree(dg.g)
 end
 
-function Graphs.outdegree(dg::D, node) where {D <: DataGraphUnion}
+function Graphs.outdegree(dg::D, node::Any) where {D <: DataGraphUnion}
     node_map = dg.node_map
-    return Graphs.outdegree(dg, node_map[node])
+    return Graphs.outdegree(dg.g, node_map[node])
+end
+
+function Graphs.outdegree(dg::D, node::Int) where {D <: DataGraphUnion}
+    node_map = dg.node_map
+    return Graphs.outdegree(dg.g, node_map[node])
 end
 
 function Graphs.degree(dg::D) where {D <: DataGraphUnion}
     return Graphs.degree(dg.g)
 end
 
-function Graphs.degree(dg::D, node) where {D <: DataGraphUnion}
+function Graphs.degree(dg::D, node::Any) where {D <: DataGraphUnion}
     node_map = dg.node_map
-    return Graphs.degree(dg, node_map[node])
+    return Graphs.degree(dg.g, node_map[node])
+end
+
+function Graphs.degree(dg::D, node::Int) where {D <: DataGraphUnion}
+    node_map = dg.node_map
+    return Graphs.degree(dg.g, node_map[node])
 end
 
 function Graphs.degree_histogram(dg::D) where {D <: DataGraphUnion}

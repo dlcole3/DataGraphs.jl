@@ -62,7 +62,7 @@ end
     @test_throws ErrorException DataGraphs.has_path(dg, 1, 7)
     @test_throws ErrorException DataGraphs.has_path(dg, 1, 7, 4)
     @test_throws ErrorException get_path(dg, 7, 3)
-    @test_throws ErrorException get_path_with_intermediate(dg, 1, 3, 7)
+    @test_throws ErrorException get_path(dg, 1, 3, 7)
 end
 
 @test average_degree(dg) == length(dg.edges) * 2 / length(dg.nodes)

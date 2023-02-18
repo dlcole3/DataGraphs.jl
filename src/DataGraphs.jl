@@ -13,6 +13,7 @@ export get_node_data, get_edge_data, ne, nn, nv, remove_node!, remove_edge!
 export add_node_attribute!, add_edge_attribute!, has_edge, has_node, has_path
 export get_node_attributes, get_edge_attributes, get_path
 export nodes_to_index, index_to_nodes, average_degree
+export rename_node_attribute!, rename_edge_attribute!
 
 abstract type AbstractDataGraph{T} <: Graphs.AbstractGraph{T} end
 
@@ -121,8 +122,6 @@ mutable struct DataGraph{T, T1, T2, M1, M2} <: AbstractDataGraph{T}
 
     node_data::NodeData{T, T1, M1}
     edge_data::EdgeData{T, T2, M2}
-
-    node_positions::Array{Union{GeometryBasics.Point{2,Float64}, Array{Float64, 2}},1}
 end
 
 """
@@ -150,8 +149,6 @@ mutable struct DataDiGraph{T, T1, T2, M1, M2} <: AbstractDataGraph{T}
 
     node_data::NodeData{T, T1, M1}
     edge_data::EdgeData{T, T2, M2}
-
-    node_positions::Array{Union{GeometryBasics.Point{2,Float64}, Array{Float64, 2}},1}
 end
 
 """

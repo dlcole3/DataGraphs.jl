@@ -136,3 +136,52 @@ function add_edge_attribute!(dg::D, attribute::String, default_weight = 0) where
 
     return true
 end
+
+"""
+    rename_node_attribute!(dg::D, attribute, new_name) where {D <: DataGraphUnion}
+
+Rename the node data `attribute` as `new_name`. If `attribute` is not defined, returns an error.
+"""
+function rename_node_attribute!(dg::D, attribute::String, new_name::String) where {D <: DataGraphUnion}
+    node_attributes = dg.node_data.attributes
+    attribute_map = dg.node_data.attribute_map
+
+    println(attribute, node_attributes, attribute in node_attributes)
+    if !(attribute in node_attributes)
+        error("$attribute is not in the node data attributes")
+    end
+
+    attribute_loc = attribute_map[attribute]
+    delete!(attribute_map, attribute)
+    deleteat!(node_attributes, attribute_loc)
+
+    insert!(node_attributes, attribute_loc, new_name)
+    attribute_map[new_name] = attribute_loc
+
+    dg.node_data.attributes = node_attributes
+    dg.node_data.attribute_map = attribute_map
+end
+
+"""
+    rename_edge_attribute!(dg::D, attribute, new_name) where {D <: DataGraphUnion}
+
+Rename the edge data `attribute` as `new_name`. If `attribute` is not defined, returns an error.
+"""
+function rename_edge_attribute!(dg::D, attribute::String, new_name::String) where {D <: DataGraphUnion}
+    edge_attributes = dg.edge_data.attributes
+    attribute_map = dg.edge_data.attribute_map
+
+    if !(attribute in edge_attributes)
+        error("$attribute is not in the edge data attributes")
+    end
+
+    attribute_loc = attribute_map[attribute]
+    delete!(attribute_map, attribute)
+    deleteat!(edge_attributes, attribute_loc)
+
+    insert!(edge_attributes, attribute_loc, new_name)
+    attribute_map[new_name] = attribute_loc
+
+    dg.edge_data.attributes = edge_attributes
+    dg.edge_data.attribute_map = attribute_map
+end

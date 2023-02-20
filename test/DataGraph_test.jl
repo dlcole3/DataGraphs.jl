@@ -212,6 +212,7 @@ add_edge_dataset!(dg4, edge_data_dict, "weight4")
     @test get_edge_data(dg3)[:, 1][:] == edge_data3
     @test get_edge_data(dg4)[:, 1][:] == [0.2, 0.5, 0.33]
 end
+
 # Test adjacency matrix constructor
 
 adj_mat = sparse([1, 1, 2, 3, 3, 4, 2, 3, 5, 4, 5, 5],

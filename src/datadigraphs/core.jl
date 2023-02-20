@@ -219,7 +219,7 @@ function add_edge_data!(dg::DataDiGraph, edge::Tuple{Any, Any}, edge_weight::T, 
 end
 
 
-function add_edge_dataset!(dg::DataDiGraph, edge_list::Vector{Tuple}, weight_list::Vector, attribute::String)
+function add_edge_dataset!(dg::DataDiGraph, edge_list::Vector, weight_list::Vector, attribute::String)
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -296,7 +296,7 @@ function add_edge_dataset!(dg::DataDiGraph, weight_list::Vector, attribute::Stri
         dg.edge_data.data = edge_data
         return true
     else
-        for i in 1:length(edge_list)
+        for i in 1:length(edges)
             edge_data[i, attribute_map[attribute]] = weight_list[i]
         end
         return true
@@ -313,7 +313,7 @@ function add_edge_dataset!(dg::DataDiGraph, weight_dict::Dict, attribute::String
 
     edge_keys = keys(weight_dict)
 
-    if !(all(x -> (node_map[x[1]], node_map[x[2]]) in edges, edge_list), edge_keys)
+    if !(all(x -> (node_map[x[1]], node_map[x[2]]) in edges, edge_keys))
         error("edge key(s) in weight dict contains edges not in datagraph")
     end
 

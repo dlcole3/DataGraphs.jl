@@ -132,8 +132,8 @@ Constructor for building a DataGraph object from a list of edges, where the edge
 vector of Tuple{Any, Any}.
 """
 function DataGraph(
-    edge_list::Vector{Tuple}
-)
+    edge_list::Vector{Tuple{N1, N2}}
+) where {N1 <: Any, N2 <: Any}
     dg = DataGraph()
 
     for i in edge_list

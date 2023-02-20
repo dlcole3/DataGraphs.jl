@@ -185,8 +185,8 @@ Removes the node (and any node data) from `datadigraph`
 """
 function remove_node!(
     dg::DataDiGraph,
-    node_name::T
-) where {T <: Any}
+    node_name::N
+) where {N <: Any}
 
     if !(node_name in dg.nodes)
         error("$node_name is not defined in the DataGraph")
@@ -284,9 +284,9 @@ Remove the directed edge from node1 to node2 from the datadigraph.
 """
 function remove_edge!(
     dg::DataDiGraph,
-    node1::T1,
-    node2::T2
-) where {T1 <: Any, T2 <: Any}
+    node1::N1,
+    node2::N2
+) where {N1 <: Any, N2 <: Any}
 
     nodes = dg.nodes
     edges = dg.edges
@@ -355,8 +355,8 @@ to the same node and these edges have weights defined on them.
 function aggregate(
     dg::DataDiGraph,
     node_set::Vector,
-    new_name::T
-) where {T <: Any}
+    new_name::N
+) where {N <: Any}
 
     nodes              = dg.nodes
     node_map           = dg.node_map

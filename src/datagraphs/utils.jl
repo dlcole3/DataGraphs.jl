@@ -486,7 +486,6 @@ function filter_edges(
     edge_data       = dg.edge_data.data
     node_map        = dg.node_map
 
-    node_attribute_map = dg.node_data.attribute_map
     edge_attribute_map = dg.edge_data.attribute_map
 
     if length(edge_attributes) == 0
@@ -635,7 +634,11 @@ end
 
 Removes the node (and any node data) from `datagraph`
 """
-function remove_node!(dg::DataGraph, node_name::Any)
+function remove_node!(
+    dg::DataGraph,
+    node_name::N
+) where {N <: Any}
+
     if !(node_name in dg.nodes)
         error("$node_name is not defined in the DataGraph")
     end
@@ -717,9 +720,9 @@ Remove the edge between node1 and node2 from the datagraph.
 """
 function remove_edge!(
     dg::DataGraph,
-    node1::T1,
-    node2::T2
-) where {T1 <: Any, T2 <: Any}
+    node1::N1,
+    node2::N2
+) where {N1 <: Any, N2 <: Any}
     nodes = dg.nodes
     edges = dg.edges
     node_map = dg.node_map
@@ -787,8 +790,8 @@ to the same node and these edges have weights defined on them.
 function aggregate(
     dg::DataGraph,
     node_set::Vector,
-    new_name::T1
-) where {T1 <: Any}
+    new_name::N
+) where {N <: Any}
     nodes              = dg.nodes
     node_map           = dg.node_map
     node_data          = dg.node_data.data

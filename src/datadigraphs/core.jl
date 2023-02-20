@@ -80,8 +80,8 @@ Add the node `node_name` to the DataDiGraph `dg`
 """
 function add_node!(
     dg::DataDiGraph,
-    node_name::T
-) where {T <: Any}
+    node_name::N
+) where {N <: Any}
 
     nodes      = dg.nodes
     attributes = dg.node_data.attributes
@@ -241,9 +241,9 @@ end
 function add_edge_data!(
     dg::DataDiGraph,
     edge::Tuple,
-    edge_weight::T,
+    edge_weight::N,
     attribute::String = "weight"
-) where {T <: Any}
+) where {N <: Any}
     add_edge_data!(dg, edge[1], edge[2], edge_weight, attribute)
 end
 

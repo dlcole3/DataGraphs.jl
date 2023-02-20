@@ -5,9 +5,9 @@ Returns the value of attribute name on the given node
 """
 function get_node_data(
     dg::DataGraph,
-    node::T,
+    node::N,
     attribute::String=dg.node_data.attributes[1]
-) where {T <: Any}
+) where {N <: Any}
 
     node_map  = dg.node_map
     node_data = dg.node_data
@@ -25,10 +25,10 @@ a tuple containing `node_name1` and `node_name2`.
 """
 function get_edge_data(
     dg::DataGraph,
-    node1::T1,
-    node2::T2,
+    node1::N1,
+    node2::N2,
     attribute::String=dg.edge_data.attributes[1]
-) where {T1 <: Any, T2 <: Any}
+) where {N1 <: Any, N2 <: Any}
 
     edge_map  = dg.edge_map
     edge_data = dg.edge_data
@@ -59,9 +59,9 @@ Return `true` if there is an edge between `node1` and `node2` in `datagraph`. El
 """
 function has_edge(
     dg::DataGraph,
-    node1::T1,
-    node2::T2
-) where {T1 <: Any, T2 <: Any}
+    node1::N1,
+    node2::N2
+) where {N1 <: Any, N2 <: Any}
 
     if !(node1 in dg.nodes)
         error("$node1 not defined in graph")

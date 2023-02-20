@@ -200,8 +200,10 @@ both data types
 """
 DataGraphUnion = Union{DataGraph{T}, DataDiGraph{T}} where T
 
-function Base.eltype(datagraph::D) where {D <: DataGraphUnion}
-    return eltype(eltype(datagraph.g.fadjlist))
+function Base.eltype(
+    dg::D
+) where {D <: DataGraphUnion}
+    return eltype(eltype(dg.g.fadjlist))
 end
 
 include("datagraphs/core.jl")

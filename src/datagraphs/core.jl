@@ -108,7 +108,9 @@ DataGraph() = DataGraph{Int, Float64, Float64, Float64, Matrix{Float64}, Matrix{
 
 Constructor for building a DataGraph object from an adjacency matrix.
 """
-function DataGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
+function DataGraph(
+    adj_mat::AbstractMatrix{T}
+) where {T <: Real}
 
     dima, dimb = size(adj_mat)
     isequal(dima, dimb) || throw(ArgumentError("Adjacency / distance matrices must be square"))
@@ -129,7 +131,9 @@ end
 Constructor for building a DataGraph object from a list of edges, where the edge list is a
 vector of Tuple{Any, Any}.
 """
-function DataGraph(edge_list::Vector{Tuple{T, T}}) where {T <: Any}
+function DataGraph(
+    edge_list::Vector{Tuple}
+)
     dg = DataGraph()
 
     for i in edge_list
@@ -139,7 +143,10 @@ function DataGraph(edge_list::Vector{Tuple{T, T}}) where {T <: Any}
     return dg
 end
 
-function _get_edge(node1_index::T, node2_index::T) where {T <: Real}
+function _get_edge(
+    node1_index::T,
+    node2_index::T
+) where {T <: Real}
     if node2_index > node1_index
         return (node1_index, node2_index)
     else
@@ -147,7 +154,11 @@ function _get_edge(node1_index::T, node2_index::T) where {T <: Real}
     end
 end
 
-function _get_edge(node_map::Dict, edge::Tuple)
+function _get_edge(
+    node_map::Dict,
+    edge::Tuple
+)
+
     node1_index = node_map[edge[1]]
     node2_index = node_map[edge[2]]
 
@@ -164,7 +175,8 @@ end
 Add the node `node_name` to the DataGraph `dg`
 """
 function add_node!(
-    dg::DataGraph, node_name::N
+    dg::DataGraph,
+    node_name::N
 ) where {N <: Any}
     nodes      = dg.nodes
     attributes = dg.node_data.attributes
@@ -203,7 +215,12 @@ end
 
 Add an edge to the DataGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
 """
-function add_edge!(dg::DataGraph, node1::N1, node2::N2) where {N1 <: Any, N2 <: Any}
+function add_edge!(
+    dg::DataGraph,
+    node1::N1,
+    node2::N2
+) where {N1 <: Any, N2 <: Any}
+
     edges      = dg.edges
     nodes      = dg.nodes
     attributes = dg.edge_data.attributes
@@ -252,7 +269,10 @@ function add_edge!(dg::DataGraph, node1::N1, node2::N2) where {N1 <: Any, N2 <: 
     end
 end
 
-function add_edge!(dg::DataGraph, edge::Tuple{Any, Any})
+function add_edge!(
+    dg::DataGraph,
+    edge::Tuple
+)
     DataGraphs.add_edge!(dg::DataGraph, edge[1], edge[2])
 end
 
@@ -263,7 +283,13 @@ Add a weight value for the given node name in the DataGraph object. User must pa
 name" for the given weight. All other nodes that do not have a node_weight value defined for
 that attribute name default to a value of zero.
 """
-function add_node_data!(dg::D, node::Any, node_weight::Any, attribute::String = "weight") where {D <: DataGraphUnion}
+function add_node_data!(
+    dg::D,
+    node::T1,
+    node_weight::T2,
+    attribute::String = "weight"
+) where {D <: DataGraphUnion, T1 <: Any, T2 <: Any}
+
     nodes         = dg.nodes
     attributes    = dg.node_data.attributes
     node_map      = dg.node_map
@@ -303,7 +329,13 @@ Add the node data in `weight_list` to `dg`. `node_list` is a list of nodes in `d
 `node_list` and `weight_list` must have the same length, and entries of `weight_list` will
 be added to the corresponding node in `node_list`
 """
-function add_node_dataset!(dg::D, node_list::Vector, weight_list::Vector, attribute::String) where {D <: DataGraphUnion}
+function add_node_dataset!(
+    dg::D,
+    node_list::Vector,
+    weight_list::Vector,
+    attribute::String
+) where {D <: DataGraphUnion}
+
     nodes         = dg.nodes
     attributes    = dg.node_data.attributes
     node_map      = dg.node_map
@@ -352,7 +384,12 @@ Add the entries of `weight_list` as node data on `dg` under the name `attribute`
 must be the same length as the number of nodes in `dg`. Entries of `weight_list` will be
 added as node data in the order that nodes are listed in `dg.nodes`.
 """
-function add_node_dataset!(dg::D, weight_list::Vector, attribute::String) where {D <: DataGraphUnion}
+function add_node_dataset!(
+    dg::D,
+    weight_list::Vector,
+    attribute::String
+) where {D <: DataGraphUnion}
+
     nodes         = dg.nodes
     attributes    = dg.node_data.attributes
     node_data     = dg.node_data.data
@@ -396,7 +433,12 @@ end
 Add the data in `weight_dict` as node data on `dg` under the name `attribute`. `weight_dict`
 must contain keys that correspond to the node names in `dg.nodes`.
 """
-function add_node_dataset!(dg::D, weight_dict::Dict, attribute::String) where {D <: DataGraphUnion}
+function add_node_dataset!(
+    dg::D,
+    weight_dict::Dict,
+    attribute::String
+) where {D <: DataGraphUnion}
+
     nodes         = dg.nodes
     node_map      = dg.node_map
     attributes    = dg.node_data.attributes
@@ -445,7 +487,14 @@ When using the second function, `edge` must be a tuple with two node names. User
 an "attribute name" for the given weight. All other edges that do not have an edge_weight
 value defined for that attribute name default to a value of zero.
 """
-function add_edge_data!(dg::DataGraph, node1::Any, node2::Any, edge_weight::Any, attribute::String)
+function add_edge_data!(
+    dg::DataGraph,
+    node1::T1,
+    node2::T2,
+    edge_weight::T3,
+    attribute::String
+) where {T1 <: Any, T2 <: Any, T3 <: Any}
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -484,7 +533,12 @@ function add_edge_data!(dg::DataGraph, node1::Any, node2::Any, edge_weight::Any,
     end
 end
 
-function add_edge_data!(dg::DataGraph, edge::Tuple{Any, Any}, edge_weight::Any, attribute::String)
+function add_edge_data!(
+    dg::DataGraph,
+    edge::Tuple,
+    edge_weight::T,
+    attribute::String
+) where {T <: Any}
     add_edge_data!(dg, edge[1], edge[2], edge_weight, attribute)
 end
 """
@@ -495,7 +549,13 @@ not integers) in `dg` and `weight_list` is a list of data/objects to be saved as
 under the name `attribute`. `edge_list` and `weight_list` must have the same length, and
 entries of `weight_list` will be added to the corresponding edge in `edge_list`
 """
-function add_edge_dataset!(dg::DataGraph, edge_list::Vector, weight_list::Vector, attribute::String)
+function add_edge_dataset!(
+    dg::DataGraph,
+    edge_list::Vector,
+    weight_list::Vector,
+    attribute::String
+)
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -547,7 +607,12 @@ Add the entries of `weight_list` as edge data on `dg` under the name `attribute`
 must be the same length as the number of edges in `dg`. Entries of `weight_list` will be
 added as edge data in the order that edges are listed in `dg.edges`.
 """
-function add_edge_dataset!(dg::DataGraph, weight_list::Vector, attribute::String)
+function add_edge_dataset!(
+    dg::DataGraph,
+    weight_list::Vector,
+    attribute::String
+
+    )
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -592,7 +657,12 @@ end
 Add the data in `weight_dict` as edge data on `dg` under the name `attribute`. `weight_dict`
 must contain keys that correspond to the edges (as node names, not integers) in `dg.edges`.
 """
-function add_edge_dataset!(dg::DataGraph, weight_dict::Dict, attribute::String)
+function add_edge_dataset!(
+    dg::DataGraph,
+    weight_dict::Dict,
+    attribute::String
+)
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map

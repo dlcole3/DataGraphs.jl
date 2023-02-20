@@ -5,7 +5,10 @@ Returns the Euler Characteristic for a DataGraph. The Euler Characteristic is eq
 number of nodes minus the number of edges or the number of connected components minus the
 number of cycles
 """
-function get_EC(dg::DataGraph)
+function get_EC(
+    dg::DataGraph
+)
+
     nodes = dg.nodes
     edges = dg.edges
 
@@ -19,7 +22,17 @@ end
 
 Constructs the graph structure for the function `matrix_to_graph`
 """
-function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, dim2, diagonal)
+function _build_matrix_graph!(
+    fadjlist,
+    edges,
+    nodes,
+    edge_map,
+    node_map,
+    dim1,
+    dim2,
+    diagonal
+)
+
     if dim1 == 0 || dim2 == 0
         error("matrix_to_graph does not support matrices with dimension sizes of 1")
     end
@@ -42,8 +55,6 @@ function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, 
                     index2 = searchsortedfirst(fadjlist2, node2)
                     insert!(fadjlist2, index2, node2)
 
-                    #push!(fadjlist[i + column_offset], i + column_offset + dim1)
-                    #push!(fadjlist[i + column_offset + dim1], i + column_offset)
                     push!(edges, edge)
                     edge_map[edge] = length(edges)
                 end
@@ -62,8 +73,6 @@ function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, 
                     index2 = searchsortedfirst(fadjlist2, node2)
                     insert!(fadjlist2, index2, node2)
 
-                    #push!(fadjlist[i + column_offset], i + column_offset + 1)
-                    #push!(fadjlist[i + column_offset + 1], i + column_offset)
                     push!(edges, edge)
                     edge_map[edge] = length(edges)
                 end
@@ -84,8 +93,6 @@ function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, 
                         index2 = searchsortedfirst(fadjlist2, node2)
                         insert!(fadjlist2, index2, node2)
 
-                        #push!(fadjlist[i + column_offset], i + column_offset + dim1 + 1)
-                        #push!(fadjlist[i + column_offset + dim1 + 1], i + column_offset)
                         push!(edges, edge)
                         edge_map[edge] = length(edges)
                     end
@@ -170,7 +177,7 @@ end
 function matrix_to_graph(
     array_3d::AbstractArray{T1, 3},
     diagonal::Bool = true,
-    attribute_list::Vector{String} = ["weight$i" for i in 1:size(array_3d)[3]],
+    attribute_list::Vector{String} = ["weight$i" for i in 1:size(array_3d)[3]]
 ) where {T1 <: Any}
 
     dim1, dim2, dim3 = size(array_3d)
@@ -219,7 +226,11 @@ their corresponding edges. The resulting graph is fully connected (every node is
 and the number of nodes is equal to the dimension of the matrix. Matrix values are saved as edge
 weights under the name `attribute`. `tol` is the tolerance used when testing that the matrix is symmetric.
 """
-function symmetric_matrix_to_graph(matrix::M; attribute::String="weight", tol::R = 1e-9) where {M <: AbstractMatrix, R <: Real}
+function symmetric_matrix_to_graph(
+    matrix::M;
+    attribute::String="weight",
+    tol::R = 1e-9
+) where {M <: AbstractMatrix, R <: Real}
 
     dim1, dim2 = size(matrix)
 
@@ -253,7 +264,11 @@ calculates the covariance of the multivariate time series (`mvts`) and then comp
 covariance. It then forms the precision matrix by taking the inverse of the covariance and
 uses the function `symmetric_matrix_to_graph` to form the edge-weighted graph.
 """
-function mvts_to_graph(mvts, attribute::String="weight", tol::R=1e-9) where {R <: Real}
+function mvts_to_graph(
+    mvts,
+    attribute::String="weight",
+    tol::R=1e-9
+) where {R <: Real}
 
     mvts_cov  = cov(mvts)
     mvts_prec = inv(mvts_cov)
@@ -271,7 +286,10 @@ a node, and each node is connected to the adjacent nodes in each dimension. This
 creates the graph structure and saves the values of the tensor to their corresponding nodes
 as weight values under the name `attribute`.
 """
-function tensor_to_graph(tensor::A, attribute::String="weight") where {A <: AbstractArray}
+function tensor_to_graph(
+    tensor::A,
+    attribute::String="weight"
+) where {A <: AbstractArray}
 
     if length(size(tensor)) != 3
         error("Tensor must have 3 dimensions; given tensor has $(length(size(tensor))) dimensions")
@@ -355,11 +373,15 @@ Removes the nodes of the graph whose weight value of `attribute_name` is greater
 `filter_value`. If `attribute_name` is not specified, this defaults to the first attribute within
 the DataGraph's `NodeData`.
 """
-function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_data.attributes[1]) where {R <: Real}
+function filter_nodes(
+    dg::DataGraph,
+    filter_val::R;
+    attribute::String=dg.node_data.attributes[1]
+) where {R <: Real}
+
     node_attributes    = dg.node_data.attributes
     edge_attributes    = dg.edge_data.attributes
     node_attribute_map = dg.node_data.attribute_map
-    edge_attribute_map = dg.edge_data.attribute_map
     node_data          = dg.node_data.data
     node_map           = dg.node_map
     nodes              = dg.nodes
@@ -451,7 +473,12 @@ Removes the edges of the graph whose weight value of `attribute_name` is greater
 `filter_value`. If `attribute_name` is not specified, this defaults to the first attribute within
 the DataGraph's `EdgeData`.
 """
-function filter_edges(dg::DataGraph, filter_val::R; attribute::String = dg.edge_data.attributes[1]) where {R <: Real}
+function filter_edges(
+    dg::DataGraph,
+    filter_val::R;
+    attribute::String = dg.edge_data.attributes[1]
+) where {R <: Real}
+
     nodes           = dg.nodes
     edges           = dg.edges
     node_attributes = dg.node_data.attributes
@@ -526,7 +553,13 @@ and computing the Euler Characteristic after each filtration. If `attribute_name
 to the first attribute in the DataGraph's `NodeData`. `scale` is a Boolean that indicates whether to scale
 the Euler Characteristic by the total number of objects (nodes + edges) in the original graph
 """
-function run_EC_on_nodes(dg::DataGraph, thresh; attribute::String = dg.node_data.attributes[1], scale::Bool = false)
+function run_EC_on_nodes(
+    dg::DataGraph,
+    thresh;
+    attribute::String = dg.node_data.attributes[1],
+    scale::Bool = false
+)
+
     nodes        = dg.nodes
     node_data    = dg.node_data.data
 
@@ -567,7 +600,13 @@ and computing the Euler Characteristic after each filtration. If `attribute_name
 to the first attribute in the DataGraph's `EdgeData`. `scale` is a Boolean that indicates whether to scale
 the Euler Characteristic by the total number of objects (nodes + edges) in the original graph
 """
-function run_EC_on_edges(dg::DataGraph, thresh; attribute::String = dg.edge_data.attributes[1], scale::Bool = false)
+function run_EC_on_edges(
+    dg::DataGraph,
+    thresh;
+    attribute::String = dg.edge_data.attributes[1],
+    scale::Bool = false
+)
+
     edge_data = dg.edge_data.data
     nodes     = dg.nodes
     edge_attribute_map = dg.edge_data.attribute_map
@@ -676,7 +715,11 @@ end
 
 Remove the edge between node1 and node2 from the datagraph.
 """
-function remove_edge!(dg::DataGraph, node1::Any, node2::Any)
+function remove_edge!(
+    dg::DataGraph,
+    node1::T1,
+    node2::T2
+) where {T1 <: Any, T2 <: Any}
     nodes = dg.nodes
     edges = dg.edges
     node_map = dg.node_map
@@ -726,7 +769,10 @@ function remove_edge!(dg::DataGraph, node1::Any, node2::Any)
     return true
 end
 
-function remove_edge!(dg::DataGraph, edge::Tuple{Any, Any})
+function remove_edge!(
+    dg::DataGraph,
+    edge::Tuple
+)
     remove_edge!(dg, edge[1], edge[2])
 end
 
@@ -738,7 +784,11 @@ If nodes have any weight/attribute values defined, These are averaged across all
 `node_list`. Edge weights are also averaged when two or more nodes in the `node_list` are connected
 to the same node and these edges have weights defined on them.
 """
-function aggregate(dg::DataGraph, node_set, new_name)
+function aggregate(
+    dg::DataGraph,
+    node_set::Vector,
+    new_name::T1
+) where {T1 <: Any}
     nodes              = dg.nodes
     node_map           = dg.node_map
     node_data          = dg.node_data.data

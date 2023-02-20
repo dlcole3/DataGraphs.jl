@@ -50,7 +50,9 @@ DataDiGraph() = DataDiGraph{Int, Float64, Float64, Float64, Matrix{Float64}, Mat
 
 Constructor for building a DataDiGraph object from an adjacency matrix.
 """
-function DataDiGraph(adj_mat::AbstractMatrix{T}) where {T <: Real}
+function DataDiGraph(
+    adj_mat::AbstractMatrix{T}
+) where {T <: Real}
 
     dima, dimb = size(adj_mat)
     isequal(dima, dimb) || throw(ArgumentError("Adjacency / distance matrices must be square"))
@@ -77,8 +79,10 @@ end
 Add the node `node_name` to the DataDiGraph `dg`
 """
 function add_node!(
-    dg::DataDiGraph, node_name::Any
-)
+    dg::DataDiGraph,
+    node_name::T
+) where {T <: Any}
+
     nodes      = dg.nodes
     attributes = dg.node_data.attributes
     node_map   = dg.node_map
@@ -118,7 +122,12 @@ end
 
 Add an edge to the DataDiGraph, `dg`. If the nodes are not defined in the graph, they are added to the graph
 """
-function add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
+function add_edge!(
+    dg::DataDiGraph,
+    node1::N1,
+    node2::N2
+) where {N1 <: Any, N2 <: Any}
+
     edges      = dg.edges
     nodes      = dg.nodes
     attributes = dg.edge_data.attributes
@@ -166,7 +175,11 @@ function add_edge!(dg::DataDiGraph, node1::Any, node2::Any)
     end
 end
 
-function add_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
+function add_edge!(
+    dg::DataDiGraph,
+    edge::Tuple
+)
+
     DataGraphs.add_edge!(dg, edge[1], edge[2])
 end
 
@@ -179,7 +192,14 @@ When using the second function, `edge` must be a tuple with two node names. User
 an "attribute name" for the given weight. All other edges that do not have an edge_weight
 value defined for that attribute name default to a value of zero.
 """
-function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T, attribute::String="weight") where {T <: Real}
+function add_edge_data!(
+    dg::DataDiGraph,
+    node1::N1,
+    node2::N2,
+    edge_weight::N3,
+    attribute::String="weight"
+) where {N1 <: Any, N2 <: Any, N3 <: Any}
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -218,12 +238,23 @@ function add_edge_data!(dg::DataDiGraph, node1::Any, node2::Any, edge_weight::T,
     end
 end
 
-function add_edge_data!(dg::DataDiGraph, edge::Tuple{Any, Any}, edge_weight::T, attribute::String = "weight") where {T <: Real}
+function add_edge_data!(
+    dg::DataDiGraph,
+    edge::Tuple,
+    edge_weight::T,
+    attribute::String = "weight"
+) where {T <: Any}
     add_edge_data!(dg, edge[1], edge[2], edge_weight, attribute)
 end
 
 
-function add_edge_dataset!(dg::DataDiGraph, edge_list::Vector, weight_list::Vector, attribute::String)
+function add_edge_dataset!(
+    dg::DataDiGraph,
+    edge_list::Vector,
+    weight_list::Vector,
+    attribute::String
+)
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -268,7 +299,12 @@ function add_edge_dataset!(dg::DataDiGraph, edge_list::Vector, weight_list::Vect
     end
 end
 
-function add_edge_dataset!(dg::DataDiGraph, weight_list::Vector, attribute::String)
+function add_edge_dataset!(
+    dg::DataDiGraph,
+    weight_list::Vector,
+    attribute::String
+)
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
@@ -307,7 +343,12 @@ function add_edge_dataset!(dg::DataDiGraph, weight_list::Vector, attribute::Stri
     end
 end
 
-function add_edge_dataset!(dg::DataDiGraph, weight_dict::Dict, attribute::String)
+function add_edge_dataset!(
+    dg::DataDiGraph,
+    weight_dict::Dict,
+    attribute::String
+)
+
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map

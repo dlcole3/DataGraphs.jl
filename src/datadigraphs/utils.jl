@@ -5,7 +5,12 @@ Removes the nodes of the graph whose weight value of `attribute_name` is greater
 `filter_value`. If `attribute_name` is not specified, this defaults to the first attribute within
 the DataGraph's `NodeData`.
 """
-function filter_nodes(dg::DataDiGraph, filter_val::R; attribute::String=dg.node_data.attributes[1]) where {R <: Real}
+function filter_nodes(
+    dg::DataDiGraph,
+    filter_val::R;
+    attribute::String=dg.node_data.attributes[1]
+) where {R <: Real}
+
     node_attributes    = dg.node_data.attributes
     edge_attributes    = dg.edge_data.attributes
     node_attribute_map = dg.node_data.attribute_map
@@ -102,7 +107,12 @@ Removes the edges of the graph whose weight value of `attribute_name` is greater
 `filter_value`. If `attribute_name` is not specified, this defaults to the first attribute within
 the DataGraph's `EdgeData`.
 """
-function filter_edges(dg::DataDiGraph, filter_val::R; attribute::String = dg.edge_data.attributes[1]) where {R <: Real}
+function filter_edges(
+    dg::DataDiGraph,
+    filter_val::R;
+    attribute::String = dg.edge_data.attributes[1]
+) where {R <: Real}
+
     nodes           = dg.nodes
     edges           = dg.edges
     node_attributes = dg.node_data.attributes
@@ -173,7 +183,11 @@ end
 
 Removes the node (and any node data) from `datadigraph`
 """
-function remove_node!(dg::DataDiGraph, node_name)
+function remove_node!(
+    dg::DataDiGraph,
+    node_name::T
+) where {T <: Any}
+
     if !(node_name in dg.nodes)
         error("$node_name is not defined in the DataGraph")
     end
@@ -268,7 +282,12 @@ end
 
 Remove the directed edge from node1 to node2 from the datadigraph.
 """
-function remove_edge!(dg::DataDiGraph, node1::Any, node2::Any)
+function remove_edge!(
+    dg::DataDiGraph,
+    node1::T1,
+    node2::T2
+) where {T1 <: Any, T2 <: Any}
+
     nodes = dg.nodes
     edges = dg.edges
     node_map = dg.node_map
@@ -318,7 +337,10 @@ function remove_edge!(dg::DataDiGraph, node1::Any, node2::Any)
     return true
 end
 
-function remove_edge!(dg::DataDiGraph, edge::Tuple{Any, Any})
+function remove_edge!(
+    dg::DataDiGraph,
+    edge::Tuple
+)
     remove_edge!(dg, edge[1], edge[2])
 end
 
@@ -330,7 +352,12 @@ If nodes have any weight/attribute values defined, These are averaged across all
 `node_list`. Edge weights are also averaged when two or more nodes in the `node_list` are connected
 to the same node and these edges have weights defined on them.
 """
-function aggregate(dg::DataDiGraph, node_set, new_name)
+function aggregate(
+    dg::DataDiGraph,
+    node_set::Vector,
+    new_name::T
+) where {T <: Any}
+
     nodes              = dg.nodes
     node_map           = dg.node_map
     node_data          = dg.node_data.data

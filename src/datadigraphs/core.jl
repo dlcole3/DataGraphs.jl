@@ -10,7 +10,7 @@ to the edge data.
 When T, T1, T2, M1, and M2 are not defined, the defaults are `Int`, `Float64`, `Float64`,
 `Matrix{Float64}`, and `Matrix{Float64}` respectively.
 """
-function DataDiGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Matrix{T1}, M2 <: Matrix{T2}}
+function DataDiGraph{T, T1, T2, T3, M1, M2}() where {T <: Integer, T1, T2, T3, M1 <: Matrix{T1}, M2 <: Matrix{T2}}
     nodes = Vector{Any}()
     edges = Vector{Tuple{T, T}}()
 
@@ -22,23 +22,27 @@ function DataDiGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Ma
     edge_map = Dict{Tuple{T, T}, T}()
     node_attributes = String[]
     edge_attributes = String[]
+    graph_attributes = String[]
     node_attribute_map = Dict{String, T}()
     edge_attribute_map = Dict{String, T}()
+    graph_attribute_map = Dict{String, T}()
     node_data = M1(undef, 0, 0)
     edge_data = M2(undef, 0, 0)
+    graph_data = Vector{T3}()
 
     g = SimpleDiGraph(ne, fadjlist, badjlist)
 
     node_data_struct = NodeData(node_attributes, node_attribute_map, node_data)
     edge_data_struct = EdgeData(edge_attributes, edge_attribute_map, edge_data)
+    graph_data_struct = GraphData(graph_attributes, graph_attribute_map, graph_data)
 
-    DataDiGraph{T, T1, T2, M1, M2}(
+    DataDiGraph{T, T1, T2, T3, M1, M2}(
         g, nodes, edges, node_map, edge_map,
-        node_data_struct, edge_data_struct
+        node_data_struct, edge_data_struct, graph_data_struct
     )
 end
 
-DataDiGraph() = DataDiGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
+DataDiGraph() = DataDiGraph{Int, Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
 
 
 """

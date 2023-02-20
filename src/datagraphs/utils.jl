@@ -104,8 +104,6 @@ function _build_matrix_graph!(fadjlist, edges, nodes, edge_map, node_map, dim1, 
                         index2 = searchsortedfirst(fadjlist2, node2)
                         insert!(fadjlist2, index2, node2)
 
-                        #push!(fadjlist[i + column_offset], i + column_offset + dim1 - 1)
-                        #push!(fadjlist[i + column_offset + dim1 - 1], i + column_offset)
                         push!(edges, edge)
                         edge_map[edge] = length(edges)
                     end
@@ -135,7 +133,7 @@ function matrix_to_graph(
 ) where {T1 <: Any}
 
     dim1, dim2 = size(matrix)
-    dg = DataGraph{Int, T1, Float64, Matrix{T1}, Matrix{Float64}}()
+    dg = DataGraph{Int, T1, Float64, Float64, Matrix{T1}, Matrix{Float64}}()
 
 
     fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
@@ -177,7 +175,7 @@ function matrix_to_graph(
 
     dim1, dim2, dim3 = size(array_3d)
 
-    dg = DataGraph{Int, T1, Float64, Matrix{T1}, Matrix{Float64}}()
+    dg = DataGraph{Int, T1, Float64, Float64, Matrix{T1}, Matrix{Float64}}()
 
     fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2)]
     edges     = dg.edges
@@ -233,7 +231,9 @@ function symmetric_matrix_to_graph(matrix::M; attribute::String="weight", tol::R
         error("Matrix is not symmetric")
     end
 
-    dg = DataGraph()
+    T2 = eltype(matrix)
+
+    dg = DataGraph{Int, Float64, T2, Float64, Matrix{Float64}, Matrix{T2}}()
 
     for j in 1:dim2
         for i in (j + 1):dim1
@@ -278,7 +278,10 @@ function tensor_to_graph(tensor::A, attribute::String="weight") where {A <: Abst
     end
 
     dim1, dim2, dim3 = size(tensor)
-    dg = DataGraph()
+
+    T1 = eltype(tensor)
+
+    dg = DataGraph{Int, T1, Float64, Float64, Matrix{T1}, Matrix{Float64}}()
 
     fadjlist  = [Vector{Int}() for i in 1:(dim1 * dim2 * dim3)]
     edges     = dg.edges
@@ -373,8 +376,9 @@ function filter_nodes(dg::DataGraph, filter_val::R; attribute::String=dg.node_da
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
     M2 = typeof(get_edge_data(dg))
+    T3 = eltype(get_graph_data(dg))
 
-    new_dg = DataGraph{T, T1, T2, M1, M2}()
+    new_dg = DataGraph{T, T1, T2, T3, M1, M2}()
 
     am = Graphs.LinAlg.adjacency_matrix(dg.g)
 
@@ -467,8 +471,9 @@ function filter_edges(dg::DataGraph, filter_val::R; attribute::String = dg.edge_
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
     M2 = typeof(get_edge_data(dg))
+    T3 = eltype(get_graph_data(dg))
 
-    new_dg = DataGraph{T, T1, T2, M1, M2}()
+    new_dg = DataGraph{T, T1, T2, T3, M1, M2}()
 
     bool_vec = dg.edge_data.data[:, edge_attribute_map[attribute]] .< filter_val
 
@@ -493,7 +498,7 @@ function filter_edges(dg::DataGraph, filter_val::R; attribute::String = dg.edge_
         insert!(node_neighbors, index, node1)
     end
 
-    new_dg = DataGraph{T, T1, T2, M1, M2}()
+    new_dg = DataGraph{T, T1, T2, T3, M1, M2}()
 
     simple_graph = Graphs.SimpleGraph(T(length(new_edges)), fadjlist)
 
@@ -758,8 +763,9 @@ function aggregate(dg::DataGraph, node_set, new_name)
     M1 = typeof(get_node_data(dg))
     T2 = eltype(get_edge_data(dg))
     M2 = typeof(get_edge_data(dg))
+    T3 = eltype(get_graph_data(dg))
 
-    new_dg = DataGraph{T, T1, T2, M1, M2}()
+    new_dg = DataGraph{T, T1, T2, T3, M1, M2}()
 
     new_nodes = setdiff(nodes, node_set)
     push!(new_nodes, new_name)

@@ -12,11 +12,13 @@ function DataGraph(
     fadjlist::Vector{Vector{T}} = [Vector{Int} for i in 1:length(nodes)],
     node_attributes::Vector{String} = String[],
     edge_attributes::Vector{String} = String[],
+    graph_attributes::Vector{String} = String[],
     node_map::Dict{Any, Int} = Dict{Any, Int}(),
     edge_map::Dict{Tuple{T}, Int} = Dict{Any, Int}(),
     node_data::M1 = Array{Float64}(undef, 0, 0),
-    edge_data::M2 = Array{Float64}(undef, 0, 0)
-) where {T <: Int, T1, T2, M1 <: Matrix{T1}, M2 <: Matrix{T2}}
+    edge_data::M2 = Array{Float64}(undef, 0, 0),
+    graph_data::Vector{T3} = Vector{Float64}()
+) where {T <: Int, T1, T2, T3, M1 <: Matrix{T1}, M2 <: Matrix{T2}}
 
     if length(edges) != ne
         error("Defined edges do not match ne")
@@ -30,39 +32,45 @@ function DataGraph(
 
     g = SimpleGraph(ne, fadjlist)
 
-    node_attribute_map = Dict{String, Int}()
-    edge_attribute_map = Dict{String, Int}()
+    node_attribute_map = Dict{String, T}()
+    edge_attribute_map = Dict{String, T}()
+    graph_attribute_map = Dict{String, T}()
 
     for i in 1:length(node_attributes)
         node_attribute_map[node_attributes[i]] = i
     end
 
     for i in 1:length(edge_attributes)
-        edge_attribtue_map[edge_attributes[i]] = i
+        edge_attribute_map[edge_attributes[i]] = i
+    end
+
+    for i in 1:length(graph_attributes)
+        graph_attribute_map[graph_attributes[i]] = i
     end
 
     node_data_struct = NodeData(node_attributes, node_attribute_map, node_data)
     edge_data_struct = EdgeData(edge_attributes, edge_attribute_map, edge_data)
+    graph_data_struct = GraphData(graph_attributes, graph_attribute_map, graph_data)
 
     DataGraph{T, M1, M2}(
         g, nodes, edges, node_map, edge_map,
-        node_data_struct, edge_data_struct
+        node_data_struct, edge_data_struct, graph_data_struct
     )
 end
 
 """
-    DataGraph{T, T1, T2, M1, M2}()
+    DataGraph{T, T1, T2, T3, M1, M2}()
     DataGraph()
 
 Constructor for initializing and empty DataGraph object. Datatypes are as follows: T is the
-integer type for indexing, T1 and T2 are the data type in the node and edge data respectively,
-and M1 <: AbstractMatrix{T1} corresponds to the node data and M2 <: AbstractMatrix{T2} corresponds
-to the edge data.
+integer type for indexing, T1, T2, and T3 are the data type in the node, edge, and graph
+data respectively, and M1 <: AbstractMatrix{T1} corresponds to the node data and
+M2 <: AbstractMatrix{T2} corresponds to the edge data.
 
-When T, T1, T2, M1, and M2 are not defined, the defaults are `Int`, `Float64`, `Float64`,
-`Matrix{Float64}`, and `Matrix{Float64}` respectively.
+When T, T1, T2, T3, M1, and M2 are not defined, the defaults are `Int`, `Float64`, `Float64`,
+`Float64`, `Matrix{Float64}`, and `Matrix{Float64}` respectively.
 """
-function DataGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: AbstractMatrix{T1}, M2 <: AbstractMatrix{T2}}
+function DataGraph{T, T1, T2, T3, M1, M2}() where {T <: Integer, T1, T2, T3, M1 <: AbstractMatrix{T1}, M2 <: AbstractMatrix{T2}}
     nodes = Vector{Any}()
     edges = Vector{Tuple{T, T}}()
 
@@ -73,23 +81,27 @@ function DataGraph{T, T1, T2, M1, M2}() where {T <: Integer, T1, T2,  M1 <: Abst
     edge_map = Dict{Tuple{T, T}, T}()
     node_attributes = String[]
     edge_attributes = String[]
+    graph_attributes = String[]
     node_attribute_map = Dict{String, T}()
     edge_attribute_map = Dict{String, T}()
+    graph_attribute_map = Dict{String, T}()
     node_data = M1(undef, 0, 0)
     edge_data = M2(undef, 0, 0)
+    graph_data = Vector{T3}()
 
     g = SimpleGraph(ne, fadjlist)
 
     node_data_struct = NodeData(node_attributes, node_attribute_map, node_data)
     edge_data_struct = EdgeData(edge_attributes, edge_attribute_map, edge_data)
+    graph_data_struct = GraphData(graph_attributes, graph_attribute_map, graph_data)
 
-    DataGraph{T, T1, T2, M1, M2}(
+    DataGraph{T, T1, T2, T3, M1, M2}(
         g, nodes, edges, node_map, edge_map,
-        node_data_struct, edge_data_struct
+        node_data_struct, edge_data_struct, graph_data_struct
     )
 end
 
-DataGraph() = DataGraph{Int, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
+DataGraph() = DataGraph{Int, Float64, Float64, Float64, Matrix{Float64}, Matrix{Float64}}()
 
 """
     DataGraph(adjacency_matrix::AbstractMatrix)
@@ -117,7 +129,7 @@ end
 Constructor for building a DataGraph object from a list of edges, where the edge list is a
 vector of Tuple{Any, Any}.
 """
-function DataGraph(edge_list::Vector{T}) where {T <: Tuple{Any, Any}}
+function DataGraph(edge_list::Vector{Tuple{T, T}}) where {T <: Any}
     dg = DataGraph()
 
     for i in edge_list
@@ -127,7 +139,7 @@ function DataGraph(edge_list::Vector{T}) where {T <: Tuple{Any, Any}}
     return dg
 end
 
-function _get_edge(node1_index, node2_index)
+function _get_edge(node1_index::T, node2_index::T) where {T <: Real}
     if node2_index > node1_index
         return (node1_index, node2_index)
     else
@@ -135,7 +147,7 @@ function _get_edge(node1_index, node2_index)
     end
 end
 
-function _get_edge(node_map, edge::Tuple{Any, Any})
+function _get_edge(node_map::Dict, edge::Tuple)
     node1_index = node_map[edge[1]]
     node2_index = node_map[edge[2]]
 

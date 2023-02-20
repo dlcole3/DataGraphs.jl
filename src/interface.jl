@@ -18,6 +18,15 @@ function get_edge_data(dg::D) where {D <: DataGraphUnion}
 end
 
 """
+    get_graph_data(dg::D) where {D <: DataGraphUnion}
+
+Returns the `data` object from a DataGraph's or DataDiGraph's `GraphData`
+"""
+function get_graph_data(dg::D) where {D <: DataGraphUnion}
+    return dg.graph_data.data
+end
+
+"""
     get_node_attributes(dg::D) where {D <: DataGraphUnion}
 
 Returns the list of attributes contained in the `NodeData` of `dg`
@@ -33,6 +42,15 @@ Returns the list of attributes contained in the `EdgeData` of `dg`
 """
 function get_edge_attributes(dg::D) where {D <: DataGraphUnion}
     return dg.edge_data.attributes
+end
+
+"""
+    get_graph_attributes(dg::D) where {D <: DataGraphUnion}
+
+Returns the list of attributes contained in the `GraphData` of `dg`
+"""
+function get_graph_attributes(dg::D) where {D <: DataGraphUnion}
+    return dg.graph_data.attributes
 end
 
 """
@@ -194,4 +212,47 @@ function rename_edge_attribute!(dg::D, attribute::String, new_name::String) wher
 
     dg.edge_data.attributes = edge_attributes
     dg.edge_data.attribute_map = attribute_map
+end
+
+"""
+    rename_graph_attribute!(dg::D, attribute, new_name) where {D <: DataGraphUnion}
+
+Rename the graph data `attribute` as `new_name`. If `attribute` is not defined, returns an error.
+"""
+function rename_graph_attribute!(dg::D, attribute::String, new_name::String) where {D <: DataGraphUnion}
+    graph_attributes = dg.graph_data.attributes
+    attribute_map = dg.graph_data.attribute_map
+
+    if !(attribute in graph_attributes)
+        error("$attribute is not in the graph data attributes")
+    end
+
+    attribute_loc = attribute_map[attribute]
+    delete!(attribute_map, attribute)
+    deleteat!(graph_attributes, attribute_loc)
+
+    insert!(graph_attributes, attribute_loc, new_name)
+    attribute_map[new_name] = attribute_loc
+    dg.graph_data.attributes = graph_attributes
+    dg.graph_data.attribute_map = attribute_map
+end
+
+"""
+    add_graph_data!(dg::D, weight, attribute) where {D <: DataGraphUnion}
+
+Add the value `weight` to the graph under the name attribute. If the attribute is already
+defined, the value will be reset to `weight`.
+"""
+function add_graph_data!(dg::D, weight::Any, attribute::String) where {D <: DataGraphUnion}
+    graph_data = dg.graph_data.data
+    graph_attributes = dg.graph_data.attributes
+    attribute_map = dg.graph_data.attribute_map
+
+    if attribute in graph_attributes
+        graph_data[attribute_map[attribute]] = weight
+    else
+        push!(graph_attributes, attribute)
+        push!(graph_data, weight)
+        attribute_map[attribute] = length(graph_attributes)
+    end
 end

@@ -219,12 +219,13 @@ function add_edge_data!(dg::DataDiGraph, edge::Tuple{Any, Any}, edge_weight::T, 
 end
 
 
-function add_edge_data!(dg::DataDiGraph, edge_list::Vector{Tuple{Any, Any}}, weight_list::Vector{Any}, attribute::String)
+function add_edge_dataset!(dg::DataDiGraph, edge_list::Vector{Tuple}, weight_list::Vector, attribute::String)
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
     node_map      = dg.node_map
     attribute_map = dg.edge_data.attribute_map
+    edge_data     = get_edge_data(dg)
 
     if length(edge_list) != length(weight_list)
         error("edge list and weight list have different lengths")
@@ -263,12 +264,13 @@ function add_edge_data!(dg::DataDiGraph, edge_list::Vector{Tuple{Any, Any}}, wei
     end
 end
 
-function add_edge_data!(dg::DataGraph, weight_list::Vector{Any}, attribute::String)
+function add_edge_dataset!(dg::DataDiGraph, weight_list::Vector, attribute::String)
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
     node_map      = dg.node_map
     attribute_map = dg.edge_data.attribute_map
+    edge_data     = get_edge_data(dg)
 
     if length(edges) != length(weight_list)
         error("weight list is not the same length as number of edges")
@@ -301,16 +303,17 @@ function add_edge_data!(dg::DataGraph, weight_list::Vector{Any}, attribute::Stri
     end
 end
 
-function add_edge_data!(dg::DataGraph, weight_dict::Dict{Tuple{Any, Any}, Any}, attribute::String)
+function add_edge_dataset!(dg::DataDiGraph, weight_dict::Dict, attribute::String)
     edges         = dg.edges
     attributes    = dg.edge_data.attributes
     edge_map      = dg.edge_map
     node_map      = dg.node_map
     attribute_map = dg.edge_data.attribute_map
+    edge_data     = get_edge_data(dg)
 
     edge_keys = keys(weight_dict)
 
-    if !(all(x -> (node_map[x[1]], node_map[x[2]]) in edges, edge_list), edge_keys))
+    if !(all(x -> (node_map[x[1]], node_map[x[2]]) in edges, edge_list), edge_keys)
         error("edge key(s) in weight dict contains edges not in datagraph")
     end
 

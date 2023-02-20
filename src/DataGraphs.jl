@@ -13,7 +13,7 @@ export get_node_data, get_edge_data, ne, nn, nv, remove_node!, remove_edge!
 export add_node_attribute!, add_edge_attribute!, has_edge, has_node, has_path
 export get_node_attributes, get_edge_attributes, get_path
 export nodes_to_index, index_to_nodes, average_degree
-export rename_node_attribute!, rename_edge_attribute!
+export rename_node_attribute!, rename_edge_attribute!, add_node_dataset!, add_edge_dataset!
 
 abstract type AbstractDataGraph{T} <: Graphs.AbstractGraph{T} end
 

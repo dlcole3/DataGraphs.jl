@@ -100,7 +100,12 @@ function add_node_attribute!(dg::D, attribute::String, default_weight = 0.0) whe
     node_data = get_node_data(dg)
     nodes = dg.nodes
 
-    new_col = fill(default_weight, (length(nodes,), 1))
+    if length(dg.node_data.attributes) == 0
+        M = typeof(node_data)
+        node_data = M(undef, length(nodes), 0)
+    end
+
+    new_col = fill(default_weight, (length(nodes), 1))
 
     node_data = hcat(node_data, new_col)
     push!(dg.node_data.attributes, attribute)
@@ -125,6 +130,11 @@ function add_edge_attribute!(dg::D, attribute::String, default_weight = 0) where
 
     edge_data = get_edge_data(dg)
     edges = dg.edges
+
+    if length(dg.edge_data.attributes) == 0
+        M = typeof(edge_data)
+        edge_data = M(undef, length(edges), 0)
+    end
 
     new_col = fill(default_weight, (length(edges), 1))
 

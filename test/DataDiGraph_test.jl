@@ -1,5 +1,20 @@
 # Test add_node!
 nodes = [7, "node2", :node3, 17.5]
+node_data = [6.3, 7.2, 8.6, 4.3]
+
+edges = [(17.5, 7), (:node3, "node2"), (7, :node3)]
+edge_data = [2.1, 3.5, 6.8]
+
+function build_datadigraph(nodes, edges)
+    dg = DataDiGraph()
+    for i in nodes
+        add_node!(dg, i)
+    end
+    for (i, j) in edges
+        DataGraphs.add_edge!(dg, i, j)
+    end
+    return dg
+end
 
 dg = DataDiGraph()
 for i in nodes
@@ -14,8 +29,6 @@ end
 end
 
 # Test add_node_data!
-
-node_data = [6.3, 7.2, 8.6, 4.3]
 
 add_node_data!(dg, nodes[2], node_data[2], "weight")
 add_node_data!(dg, nodes[4], node_data[4], "weight")
@@ -42,8 +55,6 @@ end
 
 # Test add_edge! function 1
 
-edges = [(17.5, 7), (:node3, "node2"), (7, :node3)]
-
 for (i, j) in edges
     DataGraphs.add_edge!(dg, i, j)
 end
@@ -67,8 +78,6 @@ end
 
 # Test add_edge_data!
 
-edge_data = [2.1, 3.5, 6.8]
-
 add_edge_data!(dg, edges[3][1], edges[3][2], edge_data[3], "weight")
 add_edge_data!(dg, edges[1][1], edges[1][2], edge_data[1], "weight")
 add_edge_data!(dg, edges[2][1], edges[2][2], edge_data[2], "weight")
@@ -79,8 +88,6 @@ add_edge_data!(dg, edges[2][1], edges[2][2], edge_data[2], "weight")
 end
 
 # Test add_edge! function 2
-
-edges = [(17.5, 7), (:node3, "node2"), (7, :node3)]
 
 dg = DataDiGraph()
 for i in nodes
@@ -109,8 +116,6 @@ end
 end
 
 # Test add_edge_data! function 2
-
-edge_data = [2.1, 3.5, 6.8]
 
 add_edge_data!(dg, edges[3], edge_data[3], "weight")
 add_edge_data!(dg, edges[1], edge_data[1], "weight")

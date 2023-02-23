@@ -470,3 +470,13 @@ function index_to_nodes(
 
     return node_list
 end
+
+function _add_data_column!(Data, attribute, default_weight)
+    M = typeof(Data.data)
+    dim1 = size(Data.data, 1)
+    push!(Data.attributes, attribute)
+    Data.attribute_map[attribute] = length(Data.attributes)
+    new_col = M(fill(default_weight, dim1, 1))
+
+    Data.data = hcat(Data.data, new_col)
+end

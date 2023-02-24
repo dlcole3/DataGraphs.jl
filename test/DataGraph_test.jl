@@ -49,6 +49,7 @@ add_node_data!(dg, nodes[3], node_data[3], "weight")
 @testset "add_node_data! test" begin
     @test dg.node_data.data[:, 1] == node_data
     @test dg.node_data.attributes == ["weight"]
+    @test_throws ErrorException add_node_data!(dg, "node5", 5.0, "weight")
 end
 
 # Test add_node_attribute!

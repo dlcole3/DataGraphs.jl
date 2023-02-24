@@ -119,11 +119,6 @@ function get_edge_data(
     return edge_data[:, attribute_map[attribute]][:]
 end
 
-### order_edge_data! - reorder all data
-### get_ordered_edge_data(graph)
-### get_ordered_edge_data(graph, attribute)
-### get_ordered_edge_data(graph, attribute_list)  -- Same for DataDiGraph
-
 """
     get_node_attributes(dg::D) where {D <: DataGraphUnion}
 

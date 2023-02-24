@@ -221,6 +221,21 @@ add_edge_dataset!(dg4, edge_data_dict, "weight4")
     @test_throws ErrorException get_edge_data(dg, "weight5")
 end
 
+# Test edge ordering
+
+@testset "test edge ordering" begin
+    @test get_ordered_edge_data(dg) == [6.8 4.4 16.4 0.33; 2.1 1.0 14.0 0.2; 3.5 2.3 15.3 0.5]
+    @test get_ordered_edge_data(dg, ["weight3", "weight2"]) == [16.4 4.4; 14.0 1.0; 15.3 2.3]
+    @test get_ordered_edge_data(dg, "weight4") == [0.33, 0.2, 0.5]
+    order_edges!(dg)
+    @test dg.edges == [(1, 3), (1, 4), (2, 3)]
+    @test test_map(dg.edges, dg.edge_map)
+    @test get_edge_data(dg)  == [6.8 4.4 16.4 0.33; 2.1 1.0 14.0 0.2; 3.5 2.3 15.3 0.5]
+    @test get_edge_data(dg, ["weight3", "weight2"]) == [16.4 4.4; 14.0 1.0; 15.3 2.3]
+    @test get_edge_data(dg, "weight4") == [0.33, 0.2, 0.5]
+end
+
+
 # Test graph_data
 
 add_graph_data!(dg, 1.0, "class1")

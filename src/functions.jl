@@ -507,8 +507,11 @@ Returns the ordered edge data matrix. For `DataGraph`s, this means all edges con
 `dg.nodes[1]` are ordered first, and so on. For `DataDiGraph`s, this means that all edges
 originating at `dg.nodes[1]` are ordered first, and so on for `length(dg.nodes)`
 """
-function get_ordered_edge_data(dg)
-    edge_order = get_edge_order(dg)
+function get_ordered_edge_data(
+    dg::D
+) where {D <: DataGraphUnion}
+
+    edge_order = _get_edge_order(dg)
 
     return get_edge_data(dg)[edge_order, :]
 end
@@ -521,8 +524,12 @@ For `DataGraph`s, this means all edges connected to `dg.nodes[1]` are ordered fi
 and so on. For `DataDiGraph`s, this means that all edges originating at `dg.nodes[1]`
  are ordered first, and so on for `length(dg.nodes)`
 """
-function get_ordered_edge_data(dg, attribute_list)
-    edge_order = get_edge_order(dg)
+function get_ordered_edge_data(
+    dg::D,
+    attribute_list::Vector{String}
+) where {D <: DataGraphUnion}
+
+    edge_order = _get_edge_order(dg)
 
     return get_edge_data(dg, attribute_list)[edge_order, :]
 end
@@ -535,10 +542,14 @@ For `DataGraph`s, this means all edges connected to `dg.nodes[1]` are ordered fi
 and so on. For `DataDiGraph`s, this means that all edges originating at `dg.nodes[1]`
  are ordered first, and so on for `length(dg.nodes)`
 """
-function get_ordered_edge_data(dg, attribute)
-    edge_order = get_edge_order(dg)
+function get_ordered_edge_data(
+    dg::D,
+    attribute::String
+) where {D <: DataGraphUnion}
 
-    return get_edge_data(dg, attribute)[edge_order, :]
+    edge_order = _get_edge_order(dg)
+
+    return get_edge_data(dg, attribute)[edge_order]
 end
 
 function _add_data_column!(Data, attribute, default_weight)
@@ -561,9 +572,9 @@ function _get_edge_order(
     edge_map   = dg.edge_map
 
     current_index = 1
-    for i in 1:length(nodes)
+    for i in 1:length(dg.nodes)
         fadjlist = dg.g.fadjlist[i]
-        next_index = findfirst(x -> x > i)
+        next_index = findfirst(x -> x > i, fadjlist)
         if next_index != nothing
             neighbor_list = fadjlist[next_index:length(fadjlist)]
             for j in neighbor_list
@@ -586,7 +597,7 @@ function _get_edge_order(
     edge_map   = dg.edge_map
 
     current_index = 1
-    for i in 1:length(nodes)
+    for i in 1:length(dg.nodes)
         fadjlist = dg.g.fadjlist[i]
         for j in fadjlist
             edge_order[current_index] = edge_map[(i, j)]

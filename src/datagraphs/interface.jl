@@ -79,25 +79,3 @@ function has_edge(
         return false
     end
 end
-
-function order_edges!(
-    dg::D
-) where {D <: DataGraphUnion}
-
-    edges = dg.edges
-    edge_map = dg.edge_map
-    edge_order = _get_edge_order(dg)
-
-    new_edges = edges[edge_order]
-
-    for (i, edge) in enumerate(new_edges)
-        edge_map[edge] = i
-    end
-
-    if length(dg.edge_data.attributes) > 0
-        edge_data = get_edge_data(dg)
-        dg.edge_data.data = edge_data[edge_order, :]
-    end
-
-    dg.edges = new_edges
-end

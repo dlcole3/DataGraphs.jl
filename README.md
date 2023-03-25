@@ -1,6 +1,11 @@
 # DataGraphs
 
+---
+## Note
 
+### DataGraphs.jl has been replaced by [PlasmoData.jl](https://github.com/zavalab/PlasmoData.jl). This repository is now out of date and will no longer be directly supported. PlasmoData.jl is now the supported package that contains updates to what was once called DataGraphs.jl.
+
+---
 
 | **Build Status** | **Coverage** |
 |:----------------:|:----------------:|
